@@ -27,9 +27,9 @@ jobs:
           pip install -r dev_requirements.txt
           pip install twine wheel setuptools
           python setup.py sdist bdist_wheel
-          pip install dist/dbt-spark-*.tar.gz
-          pip install dist/dbt_spark-*-py3-none-any.whl
-          twine check dist/dbt_spark-*-py3-none-any.whl dist/dbt-spark-*.tar.gz
+          pip install dist/dbt-iomete-*.tar.gz
+          pip install dist/dbt_iomete-*-py3-none-any.whl
+          twine check dist/dbt_iomete-*-py3-none-any.whl dist/dbt-iomete-*.tar.gz
 
   GitHubRelease:
     name: GitHub release
@@ -55,8 +55,8 @@ jobs:
       - name: Commit version bump and tag
         uses: EndBug/add-and-commit@v7
         with:
-          author_name: 'Leah Antkiewicz'
-          author_email: 'leah.antkiewicz@dbtlabs.com'
+          author_name: 'Namig Aliyev'
+          author_email: 'namig@iomete.com'
           message: 'Bumping version to ${{env.version_number}}'
           tag: v${{env.version_number}}
           
@@ -78,14 +78,10 @@ jobs:
           release_name: dbt-iomete v${{env.version_number}}
           prerelease: ${{ steps.release_type.outputs.isPrerelease }}
           body: |
-            Tracking [dbt-core v${{env.version_number}}](https://github.com/dbt-labs/dbt/releases/tag/v${{env.version_number}}).
+            Tracking [dbt-core v${{env.version_number}}](https://github.com/dbt-iomete/releases/tag/v${{env.version_number}}).
 
             ```sh
-            $ pip install dbt-spark==${{env.version_number}}
-            # or
-            $ pip install "dbt-spark[ODBC]==${{env.version_number}}"
-            # or
-            $ pip install "dbt-spark[PyHive]==${{env.version_number}}"
+            $ pip install dbt-iomete==${{env.version_number}}
             ```
           
   PypiRelease:
@@ -114,5 +110,5 @@ jobs:
           pip install -r dev_requirements.txt
           pip install twine wheel setuptools
           python setup.py sdist bdist_wheel
-          twine upload --non-interactive dist/dbt_spark-${{env.version_number}}-py3-none-any.whl dist/dbt-spark-${{env.version_number}}.tar.gz
+          twine upload --non-interactive dist/dbt_iomete-${{env.version_number}}-py3-none-any.whl dist/dbt-iomete-${{env.version_number}}.tar.gz
           
