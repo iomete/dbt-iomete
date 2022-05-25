@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/dbt-labs/dbt/ec7dee39f793aa4f7dd3dae37282cc87664813e4/etc/dbt-logo-full.svg" alt="dbt logo" width="500"/>
+  <img src="docs/iomete-logo.png" alt="iomete logo" width="250" /> <img src="https://raw.githubusercontent.com/dbt-labs/dbt/ec7dee39f793aa4f7dd3dae37282cc87664813e4/etc/dbt-logo-full.svg" alt="dbt logo" width="250"/>
 </p>
 <p align="center">
-  <a href="https://github.com/dbt-labs/dbt-spark/actions/workflows/main.yml">
-    <img src="https://github.com/dbt-labs/dbt-spark/actions/workflows/main.yml/badge.svg?event=push" alt="Unit Tests Badge"/>
+  <a href="https://github.com/iomete/dbt-iomete/actions/workflows/main.yml">
+    <img src="https://github.com/iomete/dbt-iomete/actions/workflows/main.yml/badge.svg?event=push" alt="Unit Tests Badge"/>
   </a>
-  <a href="https://github.com/dbt-labs/dbt-spark/actions/workflows/integration.yml">
-    <img src="https://github.com/dbt-labs/dbt-spark/actions/workflows/integration.yml/badge.svg?event=push" alt="Integration Tests Badge"/>
+  <a href="https://github.com/iomete/dbt-iomete/actions/workflows/integration.yml">
+    <img src="https://github.com/iomete/dbt-iomete/actions/workflows/integration.yml/badge.svg?event=push" alt="Integration Tests Badge"/>
   </a>
 </p>
 
@@ -14,20 +14,15 @@
 
 dbt is the T in ELT. Organize, cleanse, denormalize, filter, rename, and pre-aggregate the raw data in your warehouse so that it's ready for analysis.
 
-## dbt-spark
+## dbt-iomete
 
-The `dbt-spark` package contains all of the code enabling dbt to work with Apache Spark and Databricks. For
+The `dbt-iomete` package contains all of the code enabling dbt to work with Apache Spark and Databricks. For
 more information, consult [the docs](https://docs.getdbt.com/docs/profile-spark).
 
 ## Getting started
 
 - [Install dbt](https://docs.getdbt.com/docs/installation)
 - Read the [introduction](https://docs.getdbt.com/docs/introduction/) and [viewpoint](https://docs.getdbt.com/docs/about/viewpoint/)
-
-## Join the dbt Community
-
-- Be part of the conversation in the [dbt Community Slack](http://community.getdbt.com/)
-- Read more on the [dbt Community Discourse](https://discourse.getdbt.com)
 
 ## Reporting bugs and contributing code
 
