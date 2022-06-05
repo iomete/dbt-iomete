@@ -10,4 +10,6 @@ from dbt.include import iomete
 Plugin = AdapterPlugin(
     adapter=SparkAdapter,
     credentials=SparkCredentials,
-    include_path=iomete.PACKAGE_PATH)
+    include_path=iomete.PACKAGE_PATH,
+    dependencies=["spark"],
+    )
