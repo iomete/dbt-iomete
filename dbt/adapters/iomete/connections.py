@@ -60,8 +60,8 @@ class SparkCredentials(Credentials):
     @classmethod
     def __pre_deserialize__(cls, data):
         data = super().__pre_deserialize__(data)
-        if 'database' not in data:
-            data['database'] = None
+        if "database" not in data:
+            data["database"] = None
         return data
 
     def __post_init__(self):
@@ -71,23 +71,23 @@ class SparkCredentials(Credentials):
             self.database != self.schema
         ):
             raise dbt.exceptions.RuntimeException(
-                f'    schema: {self.schema} \n'
-                f'    database: {self.database} \n'
-                f'On Spark, database must be omitted or have the same value as'
-                f' schema.'
+                f"    schema: {self.schema} \n"
+                f"    database: {self.database} \n"
+                f"On Spark, database must be omitted or have the same value as"
+                f" schema."
             )
         self.database = None
 
     @property
     def type(self):
-        return 'iomete'
+        return "iomete"
 
     @property
     def unique_field(self):
         return self.host
 
     def _connection_keys(self):
-        return 'host', 'port', 'cluster', 'schema'
+        return "host", "port", "cluster", "schema"
 
 
 class PyhiveConnectionWrapper(object):
@@ -136,7 +136,7 @@ class PyhiveConnectionWrapper(object):
             sql = sql.strip()[:-1]
 
         # Reaching into the private enumeration here is bad form,
-        # but there doesn't appear to be any way to determine that
+        # but there doesn"t appear to be any way to determine that
         # a query has completed executing from the pyhive public API.
         # We need to use an async query + poll here, otherwise our
         # request may be dropped after ~5 minutes by the thrift server
@@ -180,7 +180,7 @@ class PyhiveConnectionWrapper(object):
         elif state not in STATE_SUCCESS:
             status_type = ThriftState._VALUES_TO_NAMES.get(
                 state,
-                'Unknown<{!r}>'.format(state))
+                "Unknown<{!r}>".format(state))
 
             dbt.exceptions.raise_database_error(
                 "Query failed with status: {}".format(status_type))
@@ -194,7 +194,7 @@ class PyhiveConnectionWrapper(object):
         if isinstance(value, NUMBERS):
             return float(value)
         elif isinstance(value, datetime):
-            return value.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+            return value.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         else:
             return value
 
@@ -204,7 +204,7 @@ class PyhiveConnectionWrapper(object):
 
 
 class SparkConnectionManager(SQLConnectionManager):
-    TYPE = 'iomete'
+    TYPE = "iomete"
 
     @contextmanager
     def exception_handler(self, sql):
@@ -218,7 +218,7 @@ class SparkConnectionManager(SQLConnectionManager):
                 raise
 
             thrift_resp = exc.args[0]
-            if hasattr(thrift_resp, 'status'):
+            if hasattr(thrift_resp, "status"):
                 msg = thrift_resp.status.errorMessage
                 raise dbt.exceptions.RuntimeException(msg)
             else:
@@ -230,7 +230,7 @@ class SparkConnectionManager(SQLConnectionManager):
     @classmethod
     def get_response(cls, cursor) -> AdapterResponse:
         # https://github.com/dbt-labs/dbt-spark/issues/142
-        message = 'OK'
+        message = "OK"
         return AdapterResponse(
             _message=message
         )
@@ -253,12 +253,12 @@ class SparkConnectionManager(SQLConnectionManager):
         for key in required:
             if not hasattr(creds, key):
                 raise dbt.exceptions.DbtProfileError(
-                    "The config '{}' is required to connect to Spark".format(key))
+                    "The config "{}" is required to connect to Spark".format(key))
 
     @classmethod
     def open(cls, connection):
         if connection.state == ConnectionState.OPEN:
-            logger.debug('Connection is already open, skipping open.')
+            logger.debug("Connection is already open, skipping open.")
             return connection
 
         creds = connection.credentials
@@ -270,7 +270,7 @@ class SparkConnectionManager(SQLConnectionManager):
 
         for i in range(1 + creds.connect_retries):
             try:
-                cls.validate_creds(creds, ['host', 'port', 'user', 'password', 'cluster'])
+                cls.validate_creds(creds, ["host", "port", "user", "password", "cluster"])
 
                 conn_url = SPARK_IOMETE_CONNECTION_URL.format(
                     host=creds.host,
@@ -291,9 +291,9 @@ class SparkConnectionManager(SQLConnectionManager):
                 if isinstance(e, EOFError):
                     # The user almost certainly has invalid credentials.
                     # Perhaps a password is invalid, or something
-                    msg = 'Failed to connect'
+                    msg = "Failed to connect"
                     if creds.password is not None:
-                        msg += ', is your password valid?'
+                        msg += ", is your password valid?"
                     raise dbt.exceptions.FailedToConnectException(msg) from e
                 retryable_message = _is_retryable_error(e)
                 if retryable_message and creds.connect_retries > 0:
@@ -306,8 +306,8 @@ class SparkConnectionManager(SQLConnectionManager):
                     time.sleep(creds.connect_timeout)
                 elif creds.retry_all and creds.connect_retries > 0:
                     msg = (
-                        f"Warning: {getattr(exc, 'message', 'No message')}, "
-                        f"retrying due to 'retry_all' configuration "
+                        f"Warning: {getattr(exc, "message", "No message")}, "
+                        f"retrying due to "retry_all" configuration "
                         f"set to true.\n\tRetrying in "
                         f"{creds.connect_timeout} seconds "
                         f"({i} of {creds.connect_retries})"
@@ -316,7 +316,7 @@ class SparkConnectionManager(SQLConnectionManager):
                     time.sleep(creds.connect_timeout)
                 else:
                     raise dbt.exceptions.FailedToConnectException(
-                        'failed to connect'
+                        "failed to connect"
                     ) from e
         else:
             raise exc
@@ -327,12 +327,12 @@ class SparkConnectionManager(SQLConnectionManager):
 
 
 def _is_retryable_error(exc: Exception) -> Optional[str]:
-    message = getattr(exc, 'message', None)
+    message = getattr(exc, "message", None)
     if message is None:
         return None
     message = message.lower()
-    if 'pending' in message:
+    if "pending" in message:
         return exc.message
-    if 'temporarily_unavailable' in message:
+    if "temporarily_unavailable" in message:
         return exc.message
     return None
