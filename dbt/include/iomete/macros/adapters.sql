@@ -75,7 +75,7 @@
 
 
 
-{% macro spark__alter_column_comment(relation, column_dict) %}
+{% macro iomete__alter_column_comment(relation, column_dict) %}
   {%- set raw_file_format = config.get('file_format', default='iceberg') -%}
   {% set is_iceberg_file_format = raw_file_format == 'iceberg' %}
 
