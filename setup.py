@@ -76,7 +76,7 @@ setup(
     packages=find_namespace_packages(include=['dbt', 'dbt.*']),
     include_package_data=True,
     install_requires=[
-        'dbt-core~={}'.format(dbt_core_version),
+        'dbt-spark~={}'.format(dbt_core_version),
         'sqlparams>=3.0.0',
         'PyHive[hive]>=0.6.0,<0.7.0',
         'thrift==0.13',

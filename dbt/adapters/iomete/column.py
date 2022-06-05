@@ -1,44 +1,13 @@
 from dataclasses import dataclass
 from typing import TypeVar, Optional, Dict, Any
 
-from dbt.adapters.base.column import Column
-from dbt.dataclass_schema import dbtClassMixin
-from hologram import JsonDict
+from dbt.adapters.spark.column import SparkColumn
 
-Self = TypeVar("Self", bound="SparkColumn")
+Self = TypeVar("Self", bound="IometeColumn")
 
 
 @dataclass
-class SparkColumn(dbtClassMixin, Column):
-    table_database: Optional[str] = None
-    table_schema: Optional[str] = None
-    table_name: Optional[str] = None
-    table_type: Optional[str] = None
-    table_owner: Optional[str] = None
-    table_stats: Optional[Dict[str, Any]] = None
-    column_index: Optional[int] = None
-
-    @classmethod
-    def translate_type(cls, dtype: str) -> str:
-        return dtype
-
-    def can_expand_to(self: Self, other_column: Self) -> bool:
-        """returns True if both columns are strings"""
-        return self.is_string() and other_column.is_string()
-
-    def literal(self, value):
-        return "cast({} as {})".format(value, self.dtype)
-
-    @property
-    def quoted(self) -> str:
-        return "`{}`".format(self.column)
-
-    @property
-    def data_type(self) -> str:
-        return self.dtype
-
-    def __repr__(self) -> str:
-        return "<SparkColumn {} ({})>".format(self.name, self.data_type)
+class IometeColumn(SparkColumn):
 
     @staticmethod
     def convert_table_stats(raw_stats: Optional[str]) -> Dict[str, Any]:
@@ -55,13 +24,3 @@ class SparkColumn(dbtClassMixin, Column):
                 table_stats[f"stats:{key}:description"] = ""
                 table_stats[f"stats:{key}:include"] = True
         return table_stats
-
-    def to_column_dict(
-            self, omit_none: bool = True, validate: bool = False
-    ) -> JsonDict:
-        original_dict = self.to_dict(omit_none=omit_none)
-        # If there are stats, merge them into the root of the dict
-        original_stats = original_dict.pop("table_stats", None)
-        if original_stats:
-            original_dict.update(original_stats)
-        return original_dict

@@ -1,18 +1,17 @@
-from concurrent.futures import Future
-from dataclasses import dataclass
-from typing import Optional, List, Dict, Any, Union, Iterable
+from concurrent.futures import Futuredataclass
+from typing import Optional, List, Dict, Any, Union, Iterable, Future
 import agate
 from dbt.contracts.relation import RelationType
 
 import dbt
 import dbt.exceptions
 
-from dbt.adapters.base import AdapterConfig
+from dbt.adapters.spark.impl import SparkConfig
 from dbt.adapters.base.impl import catch_as_completed
 from dbt.adapters.sql import SQLAdapter
-from dbt.adapters.iomete import SparkConnectionManager
-from dbt.adapters.iomete import SparkRelation
-from dbt.adapters.iomete import SparkColumn
+from dbt.adapters.iomete import IometeConnectionManager
+from dbt.adapters.iomete import IometeRelation
+from dbt.adapters.iomete import IometeColumn
 from dbt.adapters.base import BaseRelation
 from dbt.clients.agate_helper import DEFAULT_TYPE_TESTER
 from dbt.events import AdapterLogger
@@ -28,21 +27,11 @@ KEY_TABLE_OWNER = "Owner"
 KEY_TABLE_STATISTICS = "Statistics"
 
 
-@dataclass
-class SparkConfig(AdapterConfig):
-    file_format: str = "parquet"
-    location_root: Optional[str] = None
-    partition_by: Optional[Union[List[str], str]] = None
-    clustered_by: Optional[Union[List[str], str]] = None
-    buckets: Optional[int] = None
-    options: Optional[Dict[str, str]] = None
-    merge_update_columns: Optional[str] = None
-
 
 class SparkAdapter(SQLAdapter):
-    Relation = SparkRelation
-    Column = SparkColumn
-    ConnectionManager = SparkConnectionManager
+    Relation = IometeRelation
+    Column = IometeColumn
+    ConnectionManager = IometeConnectionManager
     AdapterSpecificConfigs = SparkConfig
 
     @classmethod
@@ -86,8 +75,8 @@ class SparkAdapter(SQLAdapter):
         return ""
 
     def list_relations_without_caching(
-            self, schema_relation: SparkRelation
-    ) -> List[SparkRelation]:
+            self, schema_relation: IometeRelation
+    ) -> List[IometeRelation]:
         kwargs = {"schema_relation": schema_relation}
         try:
             results = self.execute_macro(
@@ -103,7 +92,7 @@ class SparkAdapter(SQLAdapter):
             view_set = set([schema + "." + name for schema, name, _ in view_result])
         except dbt.exceptions.RuntimeException as e:
             errmsg = getattr(e, "msg", "")
-            if f"Database "{schema_relation}" not found" in errmsg:
+            if f"Database '{schema_relation}' not found" in errmsg:
                 return []
             else:
                 description = "Error while retrieving information about"
@@ -114,7 +103,7 @@ class SparkAdapter(SQLAdapter):
         for row in results:
             if len(row) != 3:
                 raise dbt.exceptions.RuntimeException(
-                    f"Invalid value from "show tables...", "
+                    f"Invalid value from 'show tables...', "
                     f"got {len(row)} values, expected 3"
                 )
             _schema, name, is_temporary = row
@@ -161,7 +150,7 @@ class SparkAdapter(SQLAdapter):
             self,
             relation: Relation,
             raw_rows: List[agate.Row]
-    ) -> List[SparkColumn]:
+    ) -> List[IometeColumn]:
         # Convert the Row to a dict
         dict_rows = [dict(zip(row._keys, row._values)) for row in raw_rows]
 
@@ -171,7 +160,7 @@ class SparkAdapter(SQLAdapter):
             self,
             relation: Relation,
             describe_table_rows: List[dict]
-    ) -> List[SparkColumn]:
+    ) -> List[IometeColumn]:
 
         pos = self.find_table_information_separator(describe_table_rows)
 
@@ -187,8 +176,8 @@ class SparkAdapter(SQLAdapter):
         }
 
         raw_table_stats = metadata.get(KEY_TABLE_STATISTICS)
-        table_stats = SparkColumn.convert_table_stats(raw_table_stats)
-        return [SparkColumn(
+        table_stats = IometeColumn.convert_table_stats(raw_table_stats)
+        return [IometeColumn(
             table_database=None,
             table_schema=relation.schema,
             table_name=relation.name,
@@ -225,7 +214,7 @@ class SparkAdapter(SQLAdapter):
                 return row["data_type"]
         return None
 
-    def get_columns_in_relation(self, relation: Relation) -> List[SparkColumn]:
+    def get_columns_in_relation(self, relation: Relation) -> List[IometeColumn]:
         cached_relations = self.cache.get_relations(relation.database, relation.schema)
         cached_relation = next(
             (
@@ -256,7 +245,7 @@ class SparkAdapter(SQLAdapter):
         return columns
 
     def _get_columns_for_catalog(
-            self, relation: SparkRelation
+            self, relation: IometeRelation
     ) -> Iterable[Dict[str, Any]]:
         logger.warning("_get_columns_for_catalog {}", relation.__dict__)
         columns = self.get_columns_in_relation(relation)
