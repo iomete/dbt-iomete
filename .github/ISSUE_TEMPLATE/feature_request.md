@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an idea for dbt-spark
+about: Suggest an idea for dbt-iomete
 title: ''
 labels: enhancement, triage
 assignees: ''

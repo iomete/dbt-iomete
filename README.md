@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/dbt-labs/dbt/ec7dee39f793aa4f7dd3dae37282cc87664813e4/etc/dbt-logo-full.svg" alt="dbt logo" width="500"/>
+  <img src="docs/iomete-logo.png" alt="iomete logo" width="300" /> <img src="https://raw.githubusercontent.com/dbt-labs/dbt/ec7dee39f793aa4f7dd3dae37282cc87664813e4/etc/dbt-logo-full.svg" alt="dbt logo" width="250"/>
 </p>
 <p align="center">
-  <a href="https://github.com/dbt-labs/dbt-spark/actions/workflows/main.yml">
-    <img src="https://github.com/dbt-labs/dbt-spark/actions/workflows/main.yml/badge.svg?event=push" alt="Unit Tests Badge"/>
+  <a href="https://github.com/iomete/dbt-iomete/actions/workflows/main.yml">
+    <img src="https://github.com/iomete/dbt-iomete/actions/workflows/main.yml/badge.svg?event=push" alt="Unit Tests Badge"/>
   </a>
-  <a href="https://github.com/dbt-labs/dbt-spark/actions/workflows/integration.yml">
-    <img src="https://github.com/dbt-labs/dbt-spark/actions/workflows/integration.yml/badge.svg?event=push" alt="Integration Tests Badge"/>
+  <a href="https://github.com/iomete/dbt-iomete/actions/workflows/release.yml">
+    <img src="https://github.com/iomete/dbt-iomete/actions/workflows/release.yml/badge.svg?event=push" alt="Release Badge"/>
   </a>
 </p>
 
@@ -14,26 +14,40 @@
 
 dbt is the T in ELT. Organize, cleanse, denormalize, filter, rename, and pre-aggregate the raw data in your warehouse so that it's ready for analysis.
 
-## dbt-spark
+## dbt-iomete
 
-The `dbt-spark` package contains all of the code enabling dbt to work with Apache Spark and Databricks. For
-more information, consult [the docs](https://docs.getdbt.com/docs/profile-spark).
+The `dbt-iomete` package contains all the code enabling dbt to work with iomete.
+
+This adapter is forked from the [dbt-spark](https://github.com/dbt-labs/dbt-spark)
 
 ## Getting started
 
-- [Install dbt](https://docs.getdbt.com/docs/installation)
-- Read the [introduction](https://docs.getdbt.com/docs/introduction/) and [viewpoint](https://docs.getdbt.com/docs/about/viewpoint/)
+### Installation
 
-## Join the dbt Community
+```shell
+pip install dbt-iomete
+```
 
-- Be part of the conversation in the [dbt Community Slack](http://community.getdbt.com/)
-- Read more on the [dbt Community Discourse](https://discourse.getdbt.com)
+Alternatively, you can install the package from GitHub with:
 
-## Reporting bugs and contributing code
+```shell
+pip install git+https://github.com/iomete/dbt-iomete.git
+```
 
-- Want to report a bug or request a feature? Let us know on [Slack](http://community.getdbt.com/), or open [an issue](https://github.com/dbt-labs/dbt-spark/issues/new)
-- Want to help us build dbt? Check out the [Contributing Guide](https://github.com/dbt-labs/dbt/blob/HEAD/CONTRIBUTING.md)
+### Profile Setup
 
-## Code of Conduct
+```yaml
+iomete:
+  target: dev
+  outputs:
+    dev:
+      type: iomete
+      cluster: cluster_name
+      host: dwh-<account_number>.iomete.com
+      port: 443
+      schema: database_name
+      user: iomete_user_name
+      password: iomete_user_password
+```
 
-Everyone interacting in the dbt project's codebases, issue trackers, chat rooms, and mailing lists is expected to follow the [dbt Code of Conduct](https://community.getdbt.com/code-of-conduct).
+For more information, consult [the docs](https://docs.iomete.com/docs/profile-setup).

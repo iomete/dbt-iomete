@@ -1,4 +1,4 @@
-# Builds the spark plugin and releases it to GitHub and Pypi
+# Builds the iomete plugin and releases it to GitHub and Pypi
 name: Build and Release
 
 on:

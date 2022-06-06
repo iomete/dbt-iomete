@@ -1,3 +1,6 @@
+## dbt-iomete 1.0.0 (May 25, 2022)
+- dbt-iomete adapter implemented and released ([here](https://github.com/iomete/dbt-iomete/commit/e692dfb8b59ff699ee546ecef7ae46388e2352f5))
+
 ## dbt-spark 1.0.1rc1 (Release TBD)
 
 ### Fixes
