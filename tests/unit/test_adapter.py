@@ -50,8 +50,6 @@ class TestSparkAdapter(unittest.TestCase):
             self.assertEqual(thrift_transport.scheme, 'https')
             self.assertEqual(thrift_transport.port, 443)
             self.assertEqual(thrift_transport.host, 'myorg.sparkhost.com')
-            self.assertEqual(
-                thrift_transport.path, '/01234-23423-coffeetime/cliservice')
 
         # with mock.patch.object(hive, 'connect', new=hive_http_connect):
         with mock.patch('dbt.adapters.iomete.connections.hive.connect', new=hive_http_connect):

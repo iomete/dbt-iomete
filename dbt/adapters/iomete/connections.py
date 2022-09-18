@@ -49,6 +49,7 @@ class SparkCredentials(Credentials):
     host: str
     database: Optional[str]
     cluster: Optional[str] = None
+    account_number: Optional[str] = None
     user: Optional[str] = None
     password: Optional[str] = None
     port: int = 443
@@ -87,7 +88,7 @@ class SparkCredentials(Credentials):
         return self.host
 
     def _connection_keys(self):
-        return 'host', 'port', 'cluster', 'schema'
+        return 'host', 'port', 'account_number', 'cluster', 'schema'
 
 
 class PyhiveConnectionWrapper(object):
@@ -265,16 +266,17 @@ class SparkConnectionManager(SQLConnectionManager):
         exc = None
 
         SPARK_IOMETE_CONNECTION_URL = (
-            "https://{host}:{port}/{cluster}/cliservice"
+            "https://{host}:{port}/lakehouse/{account_number}/{cluster}"
         )
 
         for i in range(1 + creds.connect_retries):
             try:
-                cls.validate_creds(creds, ['host', 'port', 'user', 'password', 'cluster'])
+                cls.validate_creds(creds, ['host', 'port', 'account_number', 'user', 'password', 'cluster'])
 
                 conn_url = SPARK_IOMETE_CONNECTION_URL.format(
                     host=creds.host,
                     port=creds.port,
+                    account_number=creds.account_number,
                     cluster=creds.cluster
                 )
                 logger.debug("connection url: {}".format(conn_url))

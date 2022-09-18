@@ -162,6 +162,7 @@ class DBTIntegrationTest(unittest.TestCase):
                         'type': 'iomete',
                         'host': os.getenv('DBT_IOMETE_HOST_NAME'),
                         'cluster': os.getenv('DBT_IOMETE_CLUSTER_NAME'),
+                        'account_number': os.getenv('DBT_IOMETE_ACCOUNT_NUMBER'),
                         'user': os.getenv('DBT_IOMETE_USER_NAME'),
                         'password': os.getenv('DBT_IOMETE_PASSWORD'),
                         'port': 443,
