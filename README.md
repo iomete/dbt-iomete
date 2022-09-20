@@ -43,7 +43,7 @@ iomete:
     dev:
       type: iomete
       cluster: cluster_name
-      host: <your-region>.iomete.com
+      host: <region_name>.iomete.com
       account_number: iomete_account_number
       port: 443
       schema: database_name

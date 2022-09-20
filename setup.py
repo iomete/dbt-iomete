@@ -56,7 +56,7 @@ def _get_dbt_core_version():
 
 # TODO remove old logic and add to versionBump script
 package_name = "dbt-iomete"
-package_version = "1.0.1"
+package_version = "1.0.2"
 dbt_core_version = _get_dbt_core_version()
 description = """The Apache Spark (iomete) adapter plugin for dbt"""
 
