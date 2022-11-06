@@ -1,3 +1,11 @@
+## dbt-iomete 1.1.0 (Nov 7, 2022)
+Update iomete connection parameters and improve error messaging
+
+- Improve error messaging
+- Update profile template to reflect the new iomete parameters
+- moved to py-hive-iomete from py-hive
+- changed cluster parameter to lakehouse
+
 ## dbt-iomete 1.0.2 (Sep 20, 2022)
 - `profile_template.yml` Updated according to previous release 1.0.1
 

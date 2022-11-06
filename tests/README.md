@@ -3,23 +3,11 @@
 
 ## Set environment variables
 ```bash
-export DBT_IOMETE_HOST_NAME=iomete_host_name
-export DBT_IOMETE_CLUSTER_NAME=iomete_cluster_name
-export DBT_IOMETE_USER_NAME=iomete_user_name
-export DBT_IOMETE_PASSWORD=password
-```
-
-## Run sample dbt
-
-```shell
-
-source .toxrunner/bin/activate
-
-# install globally
-pip3 install .
-
-cd sample-test/test1
-jdbc:hive2://dwh-910848238944.iomete.com/;transportMode=http;ssl=true;httpPath=reporting/cliservice
+export DBT_IOMETE_ACCOUNT_NUMBER=707505543825
+export DBT_IOMETE_HOST_NAME=eu-central-1.iomete.com
+export DBT_IOMETE_LAKEHOUSE=virtual-warehouse-1
+export DBT_IOMETE_USER_NAME=<username>
+export DBT_IOMETE_PASSWORD=<password>
 ```
 
 ## Run integration test

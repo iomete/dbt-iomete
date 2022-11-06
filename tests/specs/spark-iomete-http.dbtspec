@@ -1,7 +1,8 @@
 target:
   type: iomete
+  account_number: "{{ env_var('DBT_IOMETE_ACCOUNT_NUMBER') }}"
   host: "{{ env_var('DBT_IOMETE_HOST_NAME') }}"
-  cluster: "{{ env_var('DBT_IOMETE_CLUSTER_NAME') }}"
+  lakehouse: "{{ env_var('DBT_IOMETE_LAKEHOUSE') }}"
   user: "{{ env_var('DBT_IOMETE_USER_NAME') }}"
   password: "{{ env_var('DBT_IOMETE_PASSWORD') }}"
   port: 443

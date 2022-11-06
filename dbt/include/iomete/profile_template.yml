@@ -1,22 +1,19 @@
 fixed:
   type: iomete
 prompts:
-  host:
-    hint: <region_name>.iomete.com
-  port:
-    default: 443
-    type: 'int'
-  cluster:
-    hint: 'cluster name that dbt will connect'
   account_number:
     hint: 'iomete account number'
+  host:
+    hint: 'e.g., us-west-2.iomete.com'
+  lakehouse:
+    hint: 'cluster name that dbt will connect'
+  schema:
+    hint: 'default schema that dbt will build objects in'
   user:
     hint: 'iomete username'
   password:
     hint: 'iomete user password'
     hide_input: true
-  schema:
-    hint: 'default schema that dbt will build objects in'
   connect_timeout:
     default: 120
     hint: 'connection timeout in seconds'

@@ -1,5 +1,5 @@
 from dbt.adapters.iomete.connections import SparkConnectionManager  # noqa
-from dbt.adapters.iomete.connections import SparkCredentials
+from dbt.adapters.iomete.connections import SparkCredentials # noqa
 from dbt.adapters.iomete.relation import SparkRelation  # noqa
 from dbt.adapters.iomete.column import SparkColumn  # noqa
 from dbt.adapters.iomete.impl import SparkAdapter

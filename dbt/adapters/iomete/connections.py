@@ -46,13 +46,13 @@ NUMBERS = DECIMALS + (int, float)
 
 @dataclass
 class SparkCredentials(Credentials):
-    host: str
     database: Optional[str]
-    cluster: Optional[str] = None
     account_number: Optional[str] = None
+    host: Optional[str] = None
+    port: int = 443
+    lakehouse: Optional[str] = None
     user: Optional[str] = None
     password: Optional[str] = None
-    port: int = 443
     connect_retries: int = 0
     connect_timeout: int = 120
     server_side_parameters: Dict[str, Any] = field(default_factory=dict)
@@ -68,13 +68,13 @@ class SparkCredentials(Credentials):
     def __post_init__(self):
         # spark classifies database and schema as the same thing
         if (
-            self.database is not None and
-            self.database != self.schema
+                self.database is not None and
+                self.database != self.schema
         ):
             raise dbt.exceptions.RuntimeException(
                 f'    schema: {self.schema} \n'
                 f'    database: {self.database} \n'
-                f'On Spark, database must be omitted or have the same value as'
+                f'On iomete, database must be omitted or have the same value as'
                 f' schema.'
             )
         self.database = None
@@ -85,14 +85,15 @@ class SparkCredentials(Credentials):
 
     @property
     def unique_field(self):
-        return self.host
+        return f"iomete://{self.host}:{self.port}/lakehouse/{self.account_number}/{self.lakehouse}"
 
     def _connection_keys(self):
-        return 'host', 'port', 'account_number', 'cluster', 'schema'
+        return 'account_number', 'host', 'port', 'lakehouse', 'schema'
 
 
 class PyhiveConnectionWrapper(object):
     """Wrap a Spark connection in a way that no-ops transactions"""
+
     # https://forums.databricks.com/questions/2157/in-apache-spark-sql-can-we-roll-back-the-transacti.html  # noqa
 
     def __init__(self, handle):
@@ -253,8 +254,11 @@ class SparkConnectionManager(SQLConnectionManager):
     def validate_creds(cls, creds, required):
         for key in required:
             if not hasattr(creds, key):
+                raise dbt.exceptions.DbtProfileError(f"The config '{key}' is required to connect to iomete")
+
+            if creds.__dict__[key] is None:
                 raise dbt.exceptions.DbtProfileError(
-                    "The config '{}' is required to connect to Spark".format(key))
+                    f"The config '{key}' is set to none! This config is required to connect to iomete")
 
     @classmethod
     def open(cls, connection):
@@ -265,27 +269,18 @@ class SparkConnectionManager(SQLConnectionManager):
         creds = connection.credentials
         exc = None
 
-        SPARK_IOMETE_CONNECTION_URL = (
-            "https://{host}:{port}/lakehouse/{account_number}/{cluster}"
-        )
-
         for i in range(1 + creds.connect_retries):
             try:
-                cls.validate_creds(creds, ['host', 'port', 'account_number', 'user', 'password', 'cluster'])
-
-                conn_url = SPARK_IOMETE_CONNECTION_URL.format(
+                cls.validate_creds(creds, ['host', 'port', 'account_number', 'user', 'password', 'lakehouse'])
+                conn = hive.connect(
                     host=creds.host,
                     port=creds.port,
                     account_number=creds.account_number,
-                    cluster=creds.cluster
+                    lakehouse=creds.lakehouse,
+                    database="default",
+                    username=creds.user,
+                    password=creds.password
                 )
-                logger.debug("connection url: {}".format(conn_url))
-                transport = THttpClient.THttpClient(conn_url)
-                credentials = "%s:%s" % (creds.user, creds.password)
-                transport.setCustomHeaders(
-                    {"Authorization": "Basic " + base64.b64encode(credentials.encode()).decode().strip()})
-
-                conn = hive.connect(thrift_transport=transport)
                 handle = PyhiveConnectionWrapper(conn)
                 break
             except Exception as e:
@@ -293,9 +288,8 @@ class SparkConnectionManager(SQLConnectionManager):
                 if isinstance(e, EOFError):
                     # The user almost certainly has invalid credentials.
                     # Perhaps a password is invalid, or something
-                    msg = 'Failed to connect'
-                    if creds.password is not None:
-                        msg += ', is your password valid?'
+                    msg = 'Failed to connect. Make sure lakehouse is in non-terminated state ' \
+                          'and credentials (account_number/user/password) are correct'
                     raise dbt.exceptions.FailedToConnectException(msg) from e
                 retryable_message = _is_retryable_error(e)
                 if retryable_message and creds.connect_retries > 0:
@@ -318,7 +312,7 @@ class SparkConnectionManager(SQLConnectionManager):
                     time.sleep(creds.connect_timeout)
                 else:
                     raise dbt.exceptions.FailedToConnectException(
-                        'failed to connect'
+                        'Failed to connect! Make sure host, port is correct!'
                     ) from e
         else:
             raise exc
