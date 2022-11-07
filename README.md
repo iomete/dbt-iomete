@@ -42,13 +42,13 @@ iomete:
   outputs:
     dev:
       type: iomete
-      cluster: cluster_name
-      host: <region_name>.iomete.com
-      account_number: iomete_account_number
+      account_number: <iomete_account_number>
+      lakehouse: <serverless_lakehouse_name>
+      host: <host>
       port: 443
-      schema: database_name
-      user: iomete_user_name
-      password: iomete_user_password
+      schema: <database_name>
+      user: <iomete_user_name>
+      password: <iomete_user_password>
 ```
 
 For more information, consult [the docs](https://docs.iomete.com/docs/profile-setup).
