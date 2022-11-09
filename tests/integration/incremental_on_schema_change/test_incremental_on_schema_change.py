@@ -55,9 +55,7 @@ class TestIncrementalOnSchemaChange(DBTIntegrationTest):
         select = 'model_a incremental_sync_all_columns incremental_sync_all_columns_target'
         compare_source = 'incremental_sync_all_columns'
         compare_target = 'incremental_sync_all_columns_target'
-        results_one = self.run_dbt(['run', '--models', select, '--full-refresh'])
-        results_two = self.run_dbt(['run', '--models', select], expect_pass=False)
-        self.assertIn('Compilation Error', results_two[1].message)
+        self.run_twice_and_assert(select, compare_source, compare_target)
 
 
 class TestInsertOverwrite(TestIncrementalOnSchemaChange):

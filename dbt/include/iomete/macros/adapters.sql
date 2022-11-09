@@ -249,8 +249,14 @@
 {% macro iomete__alter_relation_add_remove_columns(relation, add_columns, remove_columns) %}
   
   {% if remove_columns %}
-    {% set platform_name = 'Delta Lake' if relation.is_delta else 'Apache Spark' %}
-    {{ exceptions.raise_compiler_error(platform_name + ' does not support dropping columns from tables') }}
+        {% set sql -%}
+            alter {{ relation.type }} {{ relation }} drop column
+            {% for column in remove_columns %}
+               {{ column.name }}{{ ',' if not loop.last }}
+            {% endfor %}
+        {%- endset -%}
+
+        {% do run_query(sql) %}
   {% endif %}
   
   {% if add_columns is none %}
