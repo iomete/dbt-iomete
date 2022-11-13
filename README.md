@@ -47,8 +47,8 @@ iomete:
       host: <host>
       port: 443
       schema: <database_name>
-      user: <iomete_user_name>
-      password: <iomete_user_password>
+      user: "{{ env_var('DBT_USER') }}"
+      password: "{{ env_var('DBT_PASSWORD') }}"
 ```
 
 For more information, consult [the docs](https://docs.iomete.com/docs/profile-setup).
