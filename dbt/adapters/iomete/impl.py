@@ -17,15 +17,27 @@ from dbt.adapters.base import BaseRelation
 from dbt.clients.agate_helper import DEFAULT_TYPE_TESTER
 from dbt.events import AdapterLogger
 from dbt.utils import executor
+import sentry_sdk
+
+from dbt.adapters.iomete.schema_service import SchemaService
 
 logger = AdapterLogger("iomete")
 
-GET_COLUMNS_IN_RELATION_MACRO_NAME = 'get_columns_in_relation'
 LIST_SCHEMAS_MACRO_NAME = 'list_schemas'
 FETCH_TBL_PROPERTIES_MACRO_NAME = 'fetch_tbl_properties'
 
 KEY_TABLE_OWNER = 'Owner'
 KEY_TABLE_STATISTICS = 'Statistics'
+
+sentry_sdk.init(
+    dsn="https://a1424d21130340e4913bd8bc1b228c12@o1140336.ingest.sentry.io/4504214031695872",
+
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production.
+    traces_sample_rate=1.0,
+    attach_stacktrace=True
+)
 
 
 @dataclass
@@ -44,6 +56,10 @@ class SparkAdapter(SQLAdapter):
     Column = SparkColumn
     ConnectionManager = SparkConnectionManager
     AdapterSpecificConfigs = SparkConfig
+
+    def __init__(self, config):
+        super().__init__(config)
+        self.schema_service = SchemaService(credentials=config.credentials)
 
     @classmethod
     def date_function(cls) -> str:
@@ -73,78 +89,27 @@ class SparkAdapter(SQLAdapter):
     def quote(self, identifier):
         return '`{}`'.format(identifier)
 
-    def add_schema_to_cache(self, schema) -> str:
-        """Cache a new schema in dbt. It will show up in `list relations`."""
-        if schema is None:
-            name = self.nice_connection_name()
-            dbt.exceptions.raise_compiler_error(
-                'Attempted to cache a null schema for {}'.format(name)
-            )
-        if dbt.flags.USE_CACHE:
-            self.cache.add_schema(None, schema)
-        # so jinja doesn't render things
-        return ''
-
     def list_relations_without_caching(
             self, schema_relation: SparkRelation
     ) -> List[SparkRelation]:
-        kwargs = {'schema_relation': schema_relation}
-        try:
-            results = self.execute_macro(
-                'list_all_relations_without_caching',
-                kwargs=kwargs
-            )
-
-            view_result = self.execute_macro(
-                'list_views_relations_without_caching',
-                kwargs=kwargs
-            )
-
-            view_set = set([schema + "." + name for schema, name, _ in view_result])
-        except dbt.exceptions.RuntimeException as e:
-            errmsg = getattr(e, 'msg', '')
-            if f"Database '{schema_relation}' not found" in errmsg:
-                return []
-            else:
-                description = "Error while retrieving information about"
-                logger.debug(f"{description} {schema_relation}: {e.msg}")
-                return []
+        tables = self.schema_service.get_tables_by_namespace(str(schema_relation))
 
         relations = []
-        for row in results:
-            if len(row) != 3:
-                raise dbt.exceptions.RuntimeException(
-                    f'Invalid value from "show tables...", '
-                    f'got {len(row)} values, expected 3'
-                )
-            _schema, name, is_temporary = row
+        for table in tables:
+            rel_type = RelationType.Table
+            if table['provider'] and table['provider'].lower() == 'view':
+                rel_type = RelationType.View
 
-            rel_type = RelationType.View \
-                if _schema + "." + name in view_set else RelationType.Table
-
-            tmp_relation = self.Relation.create(
-                schema=_schema,
-                identifier=name,
-                type=rel_type
-            )
-
-            describe_table_result = self.execute_macro(
-                GET_COLUMNS_IN_RELATION_MACRO_NAME,
-                kwargs={'relation': tmp_relation}
-            )
-
-            describe_table_rows = [dict(zip(row._keys, row._values)) for row in describe_table_result]
-            provider = self.get_provider(describe_table_rows)
+            provider = table['provider'].lower() if table['provider'] else None
 
             relation = self.Relation.create(
-                schema=_schema,
-                identifier=name,
+                schema=table['namespace'],
+                identifier=table['name'],
                 type=rel_type,
                 provider=provider,
-                is_iceberg= provider == "iceberg",
-                describe_table_rows=describe_table_rows
+                is_iceberg=provider == "iceberg",
+                table_fields=table["fields"],
             )
-
             relations.append(relation)
 
         return relations
@@ -157,103 +122,60 @@ class SparkAdapter(SQLAdapter):
 
         return super().get_relation(database, schema, identifier)
 
-    def parse_describe_extended(
-            self,
-            relation: Relation,
-            raw_rows: List[agate.Row]
-    ) -> List[SparkColumn]:
-        # Convert the Row to a dict
-        dict_rows = [dict(zip(row._keys, row._values)) for row in raw_rows]
+    def get_columns_in_relation(self, relation: Relation) -> List[SparkColumn]:
+        is_temp_table = relation.schema is None and relation.identifier.endswith("tmp")
+        if is_temp_table:
+            return self._get_columns_of_temp_table(relation)
 
-        return self.parse_describe_extended_from_describe_table_rows(relation, dict_rows)
+        cached_relations = self.cache.get_relations(relation.database, relation.schema)
+        cached_relation = next(
+            (cached_relation for cached_relation in cached_relations if str(cached_relation) == str(relation)),
+            None,
+        )
 
-    def parse_describe_extended_from_describe_table_rows(
-            self,
-            relation: Relation,
-            describe_table_rows: List[dict]
-    ) -> List[SparkColumn]:
+        table_fields = cached_relation.table_fields if cached_relation else None
+        if table_fields is None:
+            table = self.schema_service.get_table(relation.schema, relation.identifier)
+            table_fields = table["fields"] if table else None
 
-        pos = self.find_table_information_separator(describe_table_rows)
-
-        # Remove rows that start with a hash, they are comments
-        rows = [
-            row for row in describe_table_rows[0:pos]
-            if not row['col_name'].startswith('#')
-        ]
-
-        metadata_position = self.find_table_metadata_separator(describe_table_rows)
-        metadata = {
-            col['col_name']: col['data_type'] for col in describe_table_rows[metadata_position + 1:]
-        }
-
-        raw_table_stats = metadata.get(KEY_TABLE_STATISTICS)
-        table_stats = SparkColumn.convert_table_stats(raw_table_stats)
         return [SparkColumn(
             table_database=None,
             table_schema=relation.schema,
             table_name=relation.name,
             table_type=relation.type,
-            table_owner=str(metadata.get(KEY_TABLE_OWNER)),
-            table_stats=table_stats,
-            column=column['col_name'],
+            table_owner=None,
+            table_stats=None,
+            column=column["name"],
             column_index=idx,
-            dtype=column['data_type'],
-        ) for idx, column in enumerate(rows)]
+            dtype=column['type'],
+        ) for idx, column in enumerate(table_fields or [])]
 
-    @staticmethod
-    def find_table_information_separator(rows: List[dict]) -> int:
-        pos = 0
-        for row in rows:
-            if not row['col_name'] or row['col_name'].startswith('#'):
-                break
-            pos += 1
-        return pos
-
-    @staticmethod
-    def find_table_metadata_separator(rows: List[dict]) -> int:
-        last_index = len(rows) - 1
-        for pos in range(last_index, -1, -1):
-            row = rows[pos]
-            if not row['col_name'] or row['col_name'].startswith('#'):
-                return pos
-        return 0
-
-    @staticmethod
-    def get_provider(rows: List[dict]) -> Optional[str]:
-        for row in rows:
-            if row['col_name'] == 'Provider':
-                return row['data_type']
-        return None
-
-    def get_columns_in_relation(self, relation: Relation) -> List[SparkColumn]:
-        cached_relations = self.cache.get_relations(relation.database, relation.schema)
-        cached_relation = next(
-            (
-                cached_relation
-                for cached_relation in cached_relations
-                if str(cached_relation) == str(relation)
-            ),
-            None,
-        )
-        columns = []
-        if cached_relation and cached_relation.describe_table_rows:
-            columns = self.parse_describe_extended_from_describe_table_rows(
-                cached_relation, cached_relation.describe_table_rows
+    def _get_columns_of_temp_table(self, relation: Relation) -> List[SparkColumn]:
+        try:
+            desc_table_columns = self.execute_macro(
+                'describe_temp_view',
+                kwargs={"relation": relation}
             )
-        if not columns:
-            try:
-                rows: List[agate.Row] = super().get_columns_in_relation(relation)
-                columns = self.parse_describe_extended(relation, rows)
-            except dbt.exceptions.RuntimeException as e:
-                # spark would throw error when table doesn't exist, where other
-                # CDW would just return and empty list, normalizing the behavior here
-                errmsg = getattr(e, "msg", "")
-                if "Table or view not found" in errmsg or "NoSuchTableException" in errmsg:
-                    pass
-                else:
-                    raise e
 
-        return columns
+            return [SparkColumn(
+                table_database=None,
+                table_schema=relation.schema,
+                table_name=relation.name,
+                table_type=relation.type,
+                table_owner=None,
+                table_stats=None,
+                column=column['col_name'],
+                column_index=idx,
+                dtype=column['data_type'],
+            ) for idx, column in enumerate(desc_table_columns)]
+        except dbt.exceptions.RuntimeException as e:
+            # spark would throw error when table doesn't exist, where other
+            # CDW would just return and empty list, normalizing the behavior here
+            errmsg = getattr(e, "msg", "")
+            if "Table or view not found" in errmsg or "NoSuchTableException" in errmsg:
+                return []
+            else:
+                raise e
 
     def _get_columns_for_catalog(
             self, relation: SparkRelation

@@ -17,3 +17,4 @@ test/integration/.user.yml
 logs/
 /sample-test/
 /.run/pytest.run.xml
+/.run/

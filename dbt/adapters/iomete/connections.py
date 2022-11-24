@@ -7,36 +7,14 @@ from dbt.contracts.connection import ConnectionState, AdapterResponse
 from dbt.events import AdapterLogger
 from dbt.utils import DECIMALS
 
-try:
-    from TCLIService.ttypes import TOperationState as ThriftState
-    from thrift.transport import THttpClient
-    from pyhive import hive
-except ImportError:
-    ThriftState = None
-    THttpClient = None
-    hive = None
-try:
-    import pyodbc
-except ImportError:
-    pyodbc = None
+from TCLIService.ttypes import TOperationState as ThriftState
+from pyhive import hive
+
 from datetime import datetime
 
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
-try:
-    from thrift.transport.TSSLSocket import TSSLSocket
-    import thrift
-    import ssl
-    import sasl
-    import thrift_sasl
-except ImportError:
-    TSSLSocket = None
-    thrift = None
-    ssl = None
-    sasl = None
-    thrift_sasl = None
 
-import base64
 import time
 
 logger = AdapterLogger("Spark")
@@ -53,6 +31,7 @@ class SparkCredentials(Credentials):
     lakehouse: Optional[str] = None
     user: Optional[str] = None
     password: Optional[str] = None
+    api_token: Optional[str] = None
     connect_retries: int = 0
     connect_timeout: int = 120
     server_side_parameters: Dict[str, Any] = field(default_factory=dict)
@@ -128,7 +107,7 @@ class PyhiveConnectionWrapper(object):
         self.handle.close()
 
     def rollback(self, *args, **kwargs):
-        logger.debug("NotImplemented: rollback")
+        pass
 
     def fetchall(self):
         return self._cursor.fetchall()
@@ -239,16 +218,16 @@ class SparkConnectionManager(SQLConnectionManager):
 
     # No transactions on Spark....
     def add_begin_query(self, *args, **kwargs):
-        logger.debug("NotImplemented: add_begin_query")
+        pass
 
     def add_commit_query(self, *args, **kwargs):
-        logger.debug("NotImplemented: add_commit_query")
+        pass
 
     def commit(self, *args, **kwargs):
-        logger.debug("NotImplemented: commit")
+        pass
 
     def rollback(self, *args, **kwargs):
-        logger.debug("NotImplemented: rollback")
+        pass
 
     @classmethod
     def validate_creds(cls, creds, required):
@@ -271,7 +250,7 @@ class SparkConnectionManager(SQLConnectionManager):
 
         for i in range(1 + creds.connect_retries):
             try:
-                cls.validate_creds(creds, ['host', 'port', 'account_number', 'user', 'password', 'lakehouse'])
+                cls.validate_creds(creds, ['host', 'port', 'account_number', 'user', 'password', 'api_token', 'lakehouse'])
                 conn = hive.connect(
                     host=creds.host,
                     port=creds.port,

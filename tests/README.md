@@ -8,6 +8,7 @@ export DBT_IOMETE_HOST_NAME=eu-central-1.iomete.com
 export DBT_IOMETE_LAKEHOUSE=virtual-warehouse-1
 export DBT_IOMETE_USER_NAME=<username>
 export DBT_IOMETE_PASSWORD=<password>
+export DBT_IOMETE_API_TOKEN=<api_token>
 ```
 
 ## Run integration test

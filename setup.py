@@ -56,7 +56,7 @@ def _get_dbt_core_version():
 
 # TODO remove old logic and add to versionBump script
 package_name = "dbt-iomete"
-package_version = "1.2.0"
+package_version = "1.3.0"
 dbt_core_version = _get_dbt_core_version()
 description = """The Apache Spark (iomete) adapter plugin for dbt"""
 
@@ -75,6 +75,7 @@ setup(
         "dbt-core~={}".format(dbt_core_version),
         "sqlparams>=3.0.0",
         "py-hive-iomete>=0.6.5",
+        "sentry-sdk==1.11.1"
     ],
     zip_safe=False,
     classifiers=[

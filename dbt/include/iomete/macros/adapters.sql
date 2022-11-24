@@ -127,44 +127,12 @@
   {%- endcall -%}
 {% endmacro %}
 
-{% macro iomete__get_columns_in_relation(relation) -%}
-  {% call statement('get_columns_in_relation', fetch_result=True) %}
-      describe extended {{ relation.include(schema=(schema is not none)) }}
-  {% endcall %}
-  {% do return(load_result('get_columns_in_relation').table) %}
-{% endmacro %}
-
-{% macro iomete__list_relations_without_caching(relation) %}
-  {% call statement('list_relations_without_caching', fetch_result=True) -%}
-    show tables in {{ relation }} like '*'
+{% macro describe_temp_view(relation) %}
+  {% call statement('describe_temp_view', fetch_result=True) -%}
+    describe table {{ relation.include(schema=False) }}
   {% endcall %}
 
-  {% do return(load_result('list_relations_without_caching').table) %}
-{% endmacro %}
-
-
-
-{% macro list_all_relations_without_caching(schema_relation) %}
-  {% call statement('list_all_relations_without_caching', fetch_result=True) -%}
-    show tables in {{ schema_relation }} like '*'
-  {% endcall %}
-
-  {% do return(load_result('list_all_relations_without_caching').table) %}
-{% endmacro %}
-
-{% macro list_views_relations_without_caching(schema_relation) %}
-  {% call statement('list_views_relations_without_caching', fetch_result=True) -%}
-    show views in {{ schema_relation }} like '*'
-  {% endcall %}
-
-  {% do return(load_result('list_views_relations_without_caching').table) %}
-{% endmacro %}
-
-{% macro describe_table(relation) -%}
-  {% call statement('describe_table', fetch_result=True) %}
-      describe extended {{ relation.include(schema=(schema is not none)) }}
-  {% endcall %}
-  {% do return(load_result('describe_table').table) %}
+  {% do return(load_result('describe_temp_view').table) %}
 {% endmacro %}
 
 {% macro iomete__list_schemas(database) -%}
