@@ -14,9 +14,9 @@
 
 dbt is the T in ELT. Organize, cleanse, denormalize, filter, rename, and pre-aggregate the raw data in your warehouse so that it's ready for analysis.
 
-## dbt-iomete
+## dbt-IOMETE
 
-The `dbt-iomete` package contains all the code enabling dbt to work with iomete.
+The `dbt-IOMETE` package contains all the code enabling dbt to work with IOMETE.
 
 This adapter is forked from the [dbt-spark](https://github.com/dbt-labs/dbt-spark)
 
