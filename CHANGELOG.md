@@ -1,4 +1,4 @@
-## dbt-iomete 1.3.0 (Nov 13, 2022)
+## dbt-iomete 1.4.0 (Nov 13, 2022)
 - Multiple `describe table` calls are replaced by a single API call. In the DBT run, you will see a big improvement in the completion time. Especially if a database contains many  tables.
 
 ## dbt-iomete 1.2.0 (Nov 13, 2022)
