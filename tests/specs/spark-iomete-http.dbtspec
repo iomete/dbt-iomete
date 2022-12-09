@@ -5,7 +5,7 @@ target:
   lakehouse: "{{ env_var('DBT_IOMETE_LAKEHOUSE') }}"
   user: "{{ env_var('DBT_IOMETE_USER_NAME') }}"
   password: "{{ env_var('DBT_IOMETE_PASSWORD') }}"
-  api_token: "{{ env_var('DBT_IOMETE_API_TOKEN') }}"
+  token: "{{ env_var('DBT_IOMETE_TOKEN') }}"
   port: 443
   schema: "analytics_{{ var('_dbt_random_suffix') }}"
   connect_retries: 5

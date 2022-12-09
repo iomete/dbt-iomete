@@ -6,16 +6,16 @@ prompts:
   host:
     hint: 'e.g., us-west-2.iomete.com'
   lakehouse:
-    hint: 'cluster name that dbt will connect'
+    hint: 'lakehouse name that dbt will connect'
   schema:
     hint: 'default schema that dbt will build objects in'
   user:
-    hint: 'iomete username'
+    hint: 'username'
   password:
-    hint: 'iomete user password'
+    hint: 'user password'
     hide_input: true
-  api_token:
-    hint: 'api token for iomete'
+  token:
+    hint: 'user access token'
     hide_input: true
   connect_timeout:
     default: 120

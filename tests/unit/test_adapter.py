@@ -36,7 +36,7 @@ class TestSparkAdapter(unittest.TestCase):
                     'account_number': 'analytics',
                     'user': 'user1',
                     'password': 'abc123',
-                    'api_token': 'abc123',
+                    'token': 'abc123',
                     'port': 443,
                     'schema': 'analytics'
                 }

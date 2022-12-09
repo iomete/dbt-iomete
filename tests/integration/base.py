@@ -165,7 +165,7 @@ class DBTIntegrationTest(unittest.TestCase):
                         'account_number': os.getenv('DBT_IOMETE_ACCOUNT_NUMBER'),
                         'user': os.getenv('DBT_IOMETE_USER_NAME'),
                         'password': os.getenv('DBT_IOMETE_PASSWORD'),
-                        'api_token': os.getenv('DBT_IOMETE_API_TOKEN'),
+                        'token': os.getenv('DBT_IOMETE_TOKEN'),
                         'port': 443,
                         'connect_retries': 5,
                         'connect_timeout': 60,

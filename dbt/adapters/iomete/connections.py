@@ -31,7 +31,7 @@ class SparkCredentials(Credentials):
     lakehouse: Optional[str] = None
     user: Optional[str] = None
     password: Optional[str] = None
-    api_token: Optional[str] = None
+    token: Optional[str] = None
     connect_retries: int = 0
     connect_timeout: int = 120
     server_side_parameters: Dict[str, Any] = field(default_factory=dict)
@@ -250,7 +250,7 @@ class SparkConnectionManager(SQLConnectionManager):
 
         for i in range(1 + creds.connect_retries):
             try:
-                cls.validate_creds(creds, ['host', 'port', 'account_number', 'user', 'password', 'api_token', 'lakehouse'])
+                cls.validate_creds(creds, ['host', 'port', 'account_number', 'user', 'password', 'token', 'lakehouse'])
                 conn = hive.connect(
                     host=creds.host,
                     port=creds.port,
