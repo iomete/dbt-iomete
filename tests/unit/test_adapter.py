@@ -33,9 +33,8 @@ class TestSparkAdapter(unittest.TestCase):
                     'type': 'iomete',
                     'host': 'iomete.com',
                     'lakehouse': 'dbt',
-                    'account_number': 'analytics',
+                    'workspace_id': 'abcde-123',
                     'user': 'user1',
-                    'password': 'abc123',
                     'token': 'abc123',
                     'port': 443,
                     'schema': 'analytics'
@@ -64,7 +63,7 @@ class TestSparkAdapter(unittest.TestCase):
                     'schema': 'analytics',
                     'host': 'myorg.sparkhost.com',
                     'port': 443,
-                    'password': 'abc123',
+                    'token': 'abc123',
                     'cluster': '01234-23423-coffeetime',
                 }
             },

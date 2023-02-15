@@ -1,3 +1,8 @@
+## dbt-iomete 1.5.0 (Feb 13, 2023)
+- Upgraded `py-hive-iomete` library to version 1.1.0
+- Replaced `account_number` config with `workspace_id`
+- Remove password support, personal access tokens should be used instead
+
 ## dbt-iomete 1.4.0 (Nov 13, 2022)
 - Multiple `describe table` calls are replaced by a single API call. In the DBT run, you will see a big improvement in the completion time. Especially if a database contains many  tables.
 

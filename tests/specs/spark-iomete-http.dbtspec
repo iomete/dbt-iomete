@@ -1,10 +1,9 @@
 target:
   type: iomete
-  account_number: "{{ env_var('DBT_IOMETE_ACCOUNT_NUMBER') }}"
+  workspace_id: "{{ env_var('DBT_IOMETE_WORKSPACE_ID') }}"
   host: "{{ env_var('DBT_IOMETE_HOST_NAME') }}"
   lakehouse: "{{ env_var('DBT_IOMETE_LAKEHOUSE') }}"
   user: "{{ env_var('DBT_IOMETE_USER_NAME') }}"
-  password: "{{ env_var('DBT_IOMETE_PASSWORD') }}"
   token: "{{ env_var('DBT_IOMETE_TOKEN') }}"
   port: 443
   schema: "analytics_{{ var('_dbt_random_suffix') }}"

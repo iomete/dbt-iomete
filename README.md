@@ -42,13 +42,13 @@ iomete:
   outputs:
     dev:
       type: iomete
-      account_number: <iomete_account_number>
+      workspace_id: <iomete_workspace_id>
       lakehouse: <serverless_lakehouse_name>
       host: <host>
       port: 443
       schema: <database_name>
-      user: "{{ env_var('DBT_USER') }}"
-      password: "{{ env_var('DBT_PASSWORD') }}"
+      user: "{{ env_var('DBT_IOMETE_USER_NAME') }}"
+      token: "{{ env_var('DBT_IOMETE_TOKEN') }}"
 ```
 
 For more information, consult [the docs](https://docs.iomete.com/docs/profile-setup).

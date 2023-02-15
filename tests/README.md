@@ -3,11 +3,10 @@
 
 ## Set environment variables
 ```bash
-export DBT_IOMETE_ACCOUNT_NUMBER=707505543825
-export DBT_IOMETE_HOST_NAME=eu-central-1.iomete.com
+export DBT_IOMETE_WORKSPACE_ID=abcde-123
+export DBT_IOMETE_HOST_NAME=<cluster_id>.iomete.cloud
 export DBT_IOMETE_LAKEHOUSE=virtual-warehouse-1
 export DBT_IOMETE_USER_NAME=<username>
-export DBT_IOMETE_PASSWORD=<password>
 export DBT_IOMETE_TOKEN=<user_access_token>
 ```
 

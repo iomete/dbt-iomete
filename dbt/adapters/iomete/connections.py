@@ -25,12 +25,11 @@ NUMBERS = DECIMALS + (int, float)
 @dataclass
 class SparkCredentials(Credentials):
     database: Optional[str]
-    account_number: Optional[str] = None
+    workspace_id: Optional[str] = None
     host: Optional[str] = None
     port: int = 443
     lakehouse: Optional[str] = None
     user: Optional[str] = None
-    password: Optional[str] = None
     token: Optional[str] = None
     connect_retries: int = 0
     connect_timeout: int = 120
@@ -64,10 +63,10 @@ class SparkCredentials(Credentials):
 
     @property
     def unique_field(self):
-        return f"iomete://{self.host}:{self.port}/lakehouse/{self.account_number}/{self.lakehouse}"
+        return f"iomete://{self.host}:{self.port}/lakehouse/{self.workspace_id}/{self.lakehouse}"
 
     def _connection_keys(self):
-        return 'account_number', 'host', 'port', 'lakehouse', 'schema'
+        return 'workspace_id', 'host', 'port', 'lakehouse', 'schema'
 
 
 class PyhiveConnectionWrapper(object):
@@ -250,15 +249,15 @@ class SparkConnectionManager(SQLConnectionManager):
 
         for i in range(1 + creds.connect_retries):
             try:
-                cls.validate_creds(creds, ['host', 'port', 'account_number', 'user', 'password', 'token', 'lakehouse'])
+                cls.validate_creds(creds, ['host', 'port', 'workspace_id', 'user', 'token', 'lakehouse'])
                 conn = hive.connect(
                     host=creds.host,
                     port=creds.port,
-                    account_number=creds.account_number,
+                    workspace_id=creds.workspace_id,
                     lakehouse=creds.lakehouse,
                     database="default",
                     username=creds.user,
-                    password=creds.password
+                    password=creds.token
                 )
                 handle = PyhiveConnectionWrapper(conn)
                 break
@@ -268,7 +267,7 @@ class SparkConnectionManager(SQLConnectionManager):
                     # The user almost certainly has invalid credentials.
                     # Perhaps a password is invalid, or something
                     msg = 'Failed to connect. Make sure lakehouse is in non-terminated state ' \
-                          'and credentials (account_number/user/password) are correct'
+                          'and credentials (user/password) are correct'
                     raise dbt.exceptions.FailedToConnectException(msg) from e
                 retryable_message = _is_retryable_error(e)
                 if retryable_message and creds.connect_retries > 0:

@@ -13,6 +13,7 @@ class SchemaService:
     def __init__(self, credentials):
         self.host = credentials.host
         self.token = credentials.token
+        self.workspace_id = credentials.workspace_id
 
         adapter = HTTPAdapter(max_retries=Retry(total=3, backoff_factor=0.5, allowed_methods=None,
                                                 status_forcelist=[429, 500, 502, 503, 504]))
@@ -31,7 +32,9 @@ class SchemaService:
 
     def _get_namespaces(self, path: str, error_message: str):
         try:
-            namespaces = f"https://{self.host}/api/v1/schema/catalogs/{IOMETE_DEFAULT_CATALOG_NAME}/namespaces"
+            controller_host = self.session.get(f"https://{self.host}/api/v1/controller-endpoint").text
+
+            namespaces = f"https://{controller_host}/api/v1/workspaces/{self.workspace_id}/schema/catalogs/{IOMETE_DEFAULT_CATALOG_NAME}/namespaces"
             response = self.session.get(f"{namespaces}/{path}", timeout=10,
                                         headers={"X-API-TOKEN": self.token})
             if response.status_code == 404:
