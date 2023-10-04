@@ -1,3 +1,7 @@
+## dbt-iomete 1.6.0 (Oct 5, 2023)
+- Upgraded `py-hive-iomete` library to version 1.3.0
+- Removed `workspace_id`, additional parameters like scheme, port is supported now
+
 ## dbt-iomete 1.5.0 (Feb 13, 2023)
 - Upgraded `py-hive-iomete` library to version 1.1.0
 - Replaced `account_number` config with `workspace_id`

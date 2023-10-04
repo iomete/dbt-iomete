@@ -1,10 +1,14 @@
 fixed:
   type: iomete
 prompts:
-  workspace_id:
-    hint: "iomete workspace id"
   host:
-    hint: "e.g., cluster_id.iomete.cloud"
+    hint: "Data plane host. e.g., dceopo8x.iomete.cloud"
+  port:
+    hint: "Data plane port. e.g., 443"
+    default: 443
+  scheme:
+    hint: "Http connection scheme. https or http"
+    default: "https"
   lakehouse:
     hint: "lakehouse name that dbt will connect"
   schema:

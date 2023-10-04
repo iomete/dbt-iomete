@@ -3,11 +3,12 @@
 
 ## Set environment variables
 ```bash
-export DBT_IOMETE_WORKSPACE_ID=abcde-123
-export DBT_IOMETE_HOST_NAME=<cluster_id>.iomete.cloud
-export DBT_IOMETE_LAKEHOUSE=virtual-warehouse-1
-export DBT_IOMETE_USER_NAME=<username>
-export DBT_IOMETE_TOKEN=<user_access_token>
+export DBT_IOMETE_SCHEME=http
+export DBT_IOMETE_HOST=4.236.193.224
+export DBT_IOMETE_PORT=80
+export DBT_IOMETE_LAKEHOUSE=dbt
+export DBT_IOMETE_USER_NAME=admin
+export DBT_IOMETE_TOKEN=OzM3t8qCilXaeEWlc7rAMKE2Phex4YJh8NEshziwil4=
 ```
 
 ## Run integration test

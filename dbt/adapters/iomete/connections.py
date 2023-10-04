@@ -25,7 +25,7 @@ NUMBERS = DECIMALS + (int, float)
 @dataclass
 class SparkCredentials(Credentials):
     database: Optional[str]
-    workspace_id: Optional[str] = None
+    scheme: Optional[str] = None
     host: Optional[str] = None
     port: int = 443
     lakehouse: Optional[str] = None
@@ -63,10 +63,10 @@ class SparkCredentials(Credentials):
 
     @property
     def unique_field(self):
-        return f"iomete://{self.host}:{self.port}/lakehouse/{self.workspace_id}/{self.lakehouse}"
+        return f"{self.scheme}://{self.host}:{self.port}/lakehouse/{self.lakehouse}"
 
     def _connection_keys(self):
-        return 'workspace_id', 'host', 'port', 'lakehouse', 'schema'
+        return 'scheme', 'host', 'port', 'lakehouse', 'schema'
 
 
 class PyhiveConnectionWrapper(object):
@@ -249,11 +249,11 @@ class SparkConnectionManager(SQLConnectionManager):
 
         for i in range(1 + creds.connect_retries):
             try:
-                cls.validate_creds(creds, ['host', 'port', 'workspace_id', 'user', 'token', 'lakehouse'])
+                cls.validate_creds(creds, ['scheme', 'host', 'port', 'user', 'token', 'lakehouse'])
                 conn = hive.connect(
+                    scheme=creds.scheme,
                     host=creds.host,
                     port=creds.port,
-                    workspace_id=creds.workspace_id,
                     lakehouse=creds.lakehouse,
                     database="default",
                     username=creds.user,

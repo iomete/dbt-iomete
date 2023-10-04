@@ -42,8 +42,8 @@ iomete:
   outputs:
     dev:
       type: iomete
-      workspace_id: <iomete_workspace_id>
       lakehouse: <serverless_lakehouse_name>
+      scheme: https # or http
       host: <host>
       port: 443
       schema: <database_name>

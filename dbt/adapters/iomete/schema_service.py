@@ -11,14 +11,12 @@ IOMETE_DEFAULT_CATALOG_NAME = "spark_catalog"
 
 class SchemaService:
     def __init__(self, credentials):
-        self.host = credentials.host
-        self.token = credentials.token
-        self.workspace_id = credentials.workspace_id
+        self.credentials = credentials
 
         adapter = HTTPAdapter(max_retries=Retry(total=3, backoff_factor=0.5, allowed_methods=None,
                                                 status_forcelist=[429, 500, 502, 503, 504]))
         self.session = requests.Session()
-        self.session.mount("https://", adapter)
+        self.session.mount(credentials.scheme, adapter)
 
     def get_tables_by_namespace(self, namespace: str) -> list:
         return self._get_namespaces(
@@ -32,11 +30,10 @@ class SchemaService:
 
     def _get_namespaces(self, path: str, error_message: str):
         try:
-            controller_host = self.session.get(f"https://{self.host}/api/v1/controller-endpoint").text
 
-            namespaces = f"https://{controller_host}/api/v1/workspaces/{self.workspace_id}/schema/catalogs/{IOMETE_DEFAULT_CATALOG_NAME}/namespaces"
+            namespaces = f"{self.credentials.scheme}://{self.credentials.host}:{self.credentials.port}/api/v1/sql/schema/catalogs/{IOMETE_DEFAULT_CATALOG_NAME}/namespaces"
             response = self.session.get(f"{namespaces}/{path}", timeout=10,
-                                        headers={"X-API-TOKEN": self.token})
+                                        headers={"X-API-TOKEN": self.credentials.token})
             if response.status_code == 404:
                 return None
 

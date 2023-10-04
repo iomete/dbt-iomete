@@ -31,9 +31,9 @@ class TestSparkAdapter(unittest.TestCase):
             'outputs': {
                 'test': {
                     'type': 'iomete',
+                    'scheme': 'https',
                     'host': 'iomete.com',
                     'lakehouse': 'dbt',
-                    'workspace_id': 'abcde-123',
                     'user': 'user1',
                     'token': 'abc123',
                     'port': 443,
@@ -61,6 +61,7 @@ class TestSparkAdapter(unittest.TestCase):
                     # not allowed
                     'database': 'analytics2',
                     'schema': 'analytics',
+                    'scheme': 'https',
                     'host': 'myorg.sparkhost.com',
                     'port': 443,
                     'token': 'abc123',

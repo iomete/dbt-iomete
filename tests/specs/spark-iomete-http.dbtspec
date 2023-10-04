@@ -1,11 +1,11 @@
 target:
   type: iomete
-  workspace_id: "{{ env_var('DBT_IOMETE_WORKSPACE_ID') }}"
-  host: "{{ env_var('DBT_IOMETE_HOST_NAME') }}"
+  scheme: "{{ env_var('DBT_IOMETE_SCHEME') }}"
+  host: "{{ env_var('DBT_IOMETE_HOST') }}"
   lakehouse: "{{ env_var('DBT_IOMETE_LAKEHOUSE') }}"
   user: "{{ env_var('DBT_IOMETE_USER_NAME') }}"
   token: "{{ env_var('DBT_IOMETE_TOKEN') }}"
-  port: 443
+  port: 80
   schema: "analytics_{{ var('_dbt_random_suffix') }}"
   connect_retries: 5
   connect_timeout: 60

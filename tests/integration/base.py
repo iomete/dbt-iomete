@@ -160,12 +160,12 @@ class DBTIntegrationTest(unittest.TestCase):
                 'outputs': {
                     'thrift': {
                         'type': 'iomete',
-                        'host': os.getenv('DBT_IOMETE_HOST_NAME'),
+                        'scheme': os.getenv('DBT_IOMETE_SCHEME'),
+                        'host': os.getenv('DBT_IOMETE_HOST'),
                         'lakehouse': os.getenv('DBT_IOMETE_LAKEHOUSE'),
-                        'workspace_id': os.getenv('DBT_IOMETE_WORKSPACE_ID'),
                         'user': os.getenv('DBT_IOMETE_USER_NAME'),
                         'token': os.getenv('DBT_IOMETE_TOKEN'),
-                        'port': 443,
+                        'port': int(os.getenv('DBT_IOMETE_PORT')),
                         'connect_retries': 5,
                         'connect_timeout': 60,
                         'schema': self.unique_schema()
