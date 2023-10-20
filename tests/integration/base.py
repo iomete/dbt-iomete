@@ -160,7 +160,7 @@ class DBTIntegrationTest(unittest.TestCase):
                 'outputs': {
                     'thrift': {
                         'type': 'iomete',
-                        'scheme': os.getenv('DBT_IOMETE_SCHEME'),
+                        'https': False,
                         'host': os.getenv('DBT_IOMETE_HOST'),
                         'lakehouse': os.getenv('DBT_IOMETE_LAKEHOUSE'),
                         'user': os.getenv('DBT_IOMETE_USER_NAME'),

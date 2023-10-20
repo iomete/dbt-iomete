@@ -42,13 +42,13 @@ iomete:
   outputs:
     dev:
       type: iomete
-      lakehouse: <serverless_lakehouse_name>
-      scheme: https # or http
       host: <host>
       port: 443
+      https: true # or http
+      lakehouse: <serverless_lakehouse_name>
       schema: <database_name>
       user: "{{ env_var('DBT_IOMETE_USER_NAME') }}"
       token: "{{ env_var('DBT_IOMETE_TOKEN') }}"
 ```
 
-For more information, consult [the docs](https://docs.iomete.com/docs/profile-setup).
+For more information, consult [the docs](https://iomete.com/docs/guides/dbt/getting-started-with-iomete-dbt).

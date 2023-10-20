@@ -2,13 +2,13 @@ fixed:
   type: iomete
 prompts:
   host:
-    hint: "Data plane host. e.g., dceopo8x.iomete.cloud"
+    hint: "Data plane host."
   port:
     hint: "Data plane port. e.g., 443"
     default: 443
-  scheme:
-    hint: "Http connection scheme. https or http"
-    default: "https"
+  https:
+    hint: "Connection is https. Set to false for http."
+    default: true
   lakehouse:
     hint: "lakehouse name that dbt will connect"
   schema:

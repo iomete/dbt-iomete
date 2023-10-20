@@ -3,7 +3,6 @@
 
 ## Set environment variables
 ```bash
-export DBT_IOMETE_SCHEME=http
 export DBT_IOMETE_HOST=4.236.193.224
 export DBT_IOMETE_PORT=80
 export DBT_IOMETE_LAKEHOUSE=dbt

@@ -25,7 +25,7 @@ NUMBERS = DECIMALS + (int, float)
 @dataclass
 class SparkCredentials(Credentials):
     database: Optional[str]
-    scheme: Optional[str] = None
+    https: bool = True
     host: Optional[str] = None
     port: int = 443
     lakehouse: Optional[str] = None
@@ -62,11 +62,15 @@ class SparkCredentials(Credentials):
         return 'iomete'
 
     @property
+    def scheme(self):
+        return 'https' if self.https else 'http'
+
+    @property
     def unique_field(self):
         return f"{self.scheme}://{self.host}:{self.port}/lakehouse/{self.lakehouse}"
 
     def _connection_keys(self):
-        return 'scheme', 'host', 'port', 'lakehouse', 'schema'
+        return 'host', 'port', 'lakehouse', 'schema'
 
 
 class PyhiveConnectionWrapper(object):
@@ -249,7 +253,7 @@ class SparkConnectionManager(SQLConnectionManager):
 
         for i in range(1 + creds.connect_retries):
             try:
-                cls.validate_creds(creds, ['scheme', 'host', 'port', 'user', 'token', 'lakehouse'])
+                cls.validate_creds(creds, ['host', 'port', 'user', 'token', 'lakehouse'])
                 conn = hive.connect(
                     scheme=creds.scheme,
                     host=creds.host,
@@ -290,7 +294,7 @@ class SparkConnectionManager(SQLConnectionManager):
                     time.sleep(creds.connect_timeout)
                 else:
                     raise dbt.exceptions.FailedToConnectException(
-                        'Failed to connect! Make sure host, port is correct!'
+                        'Failed to connect! Make sure host, port, protocol (https/http) is correct!'
                     ) from e
         else:
             raise exc
