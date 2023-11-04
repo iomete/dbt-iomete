@@ -1,6 +1,4 @@
-import json
 import os
-import io
 import random
 import shutil
 import sys
@@ -9,14 +7,12 @@ import traceback
 import unittest
 from contextlib import contextmanager
 from datetime import datetime
-from functools import wraps
+from io import StringIO
 
-import pytest
 import yaml
 from unittest.mock import patch
 
-import dbt.main as dbt
-from dbt import flags
+from dbt.cli.main import dbtRunner
 from dbt.deprecations import reset_deprecations
 from dbt.adapters.factory import get_adapter, reset_adapters, register_adapter
 from dbt.clients.jinja import template_cache
@@ -24,7 +20,7 @@ from dbt.config import RuntimeConfig
 from dbt.context import providers
 from dbt.logger import log_manager
 from dbt.events.functions import (
-    capture_stdout_logs, fire_event, setup_event_logger, stop_capture_stdout_logs
+    capture_stdout_logs, stop_capture_stdout_logs, setup_event_logger
 )
 from dbt.events import AdapterLogger
 from dbt.contracts.graph.manifest import Manifest
@@ -37,11 +33,11 @@ INITIAL_ROOT = os.getcwd()
 def normalize(path):
     """On windows, neither is enough on its own:
 
-    >>> normcase('C:\\documents/ALL CAPS/subdir\\..')
+    >> normcase('C:\\documents/ALL CAPS/subdir\\..')
     'c:\\documents\\all caps\\subdir\\..'
-    >>> normpath('C:\\documents/ALL CAPS/subdir\\..')
+    >> normpath('C:\\documents/ALL CAPS/subdir\\..')
     'C:\\documents\\ALL CAPS'
-    >>> normpath(normcase('C:\\documents/ALL CAPS/subdir\\..'))
+    >> normpath(normcase('C:\\documents/ALL CAPS/subdir\\..'))
     'c:\\documents\\all caps'
     """
     return os.path.normcase(os.path.normpath(path))
@@ -100,8 +96,8 @@ def _pytest_get_test_root():
         head, tail = os.path.split(head)
         path_parts.append(tail)
     path_parts.reverse()
-    # dbt tests are all of the form 'tests/integration/suite_name'
-    target = os.path.join(*path_parts[:3])  # TODO: try to not hard code this
+    # dbt tests are of the form 'tests/integration/suite_name'
+    target = os.path.join(*path_parts[:3])  # try to not hard code this
     return os.path.join(relative_to, target)
 
 
@@ -160,7 +156,7 @@ class DBTIntegrationTest(unittest.TestCase):
                 'outputs': {
                     'thrift': {
                         'type': 'iomete',
-                        'https': False,
+                        'https': os.getenv('DBT_IOMETE_HTTPS', 'False') == 'true',
                         'host': os.getenv('DBT_IOMETE_HOST'),
                         'lakehouse': os.getenv('DBT_IOMETE_LAKEHOUSE'),
                         'user': os.getenv('DBT_IOMETE_USER_NAME'),
@@ -195,14 +191,33 @@ class DBTIntegrationTest(unittest.TestCase):
         return normalize(tempfile.mkdtemp(prefix='dbt-int-test-'))
 
     def setUp(self):
-        self.dbt_core_install_root = os.path.dirname(dbt.__file__)
+        # self.dbt_core_install_root = os.path.dirname(dbt.__file__)
         log_manager.reset_handlers()
         self.initial_dir = INITIAL_ROOT
         os.chdir(self.initial_dir)
         # before we go anywhere, collect the initial path info
         self._logs_dir = os.path.join(self.initial_dir, 'logs', self.prefix)
-        setup_event_logger(self._logs_dir)
+
+        from dbt.flags import set_from_args, get_flags
+        from argparse import Namespace
+
+        set_from_args(Namespace(**{
+            "LOG_PATH": self._logs_dir,
+            "LOG_LEVEL": "info",
+            "LOG_FORMAT": "text",
+            "QUIET": False,
+            "DEBUG": False,
+            "USE_COLORS": False,
+            "LOG_CACHE_EVENTS": False,
+            "LOG_LEVEL_FILE": "info",
+            "LOG_FORMAT_FILE": "text",
+            "USE_COLORS_FILE": False,
+            "LOG_FILE_MAX_BYTES": 100000000,
+        }), None)
+
+        setup_event_logger(get_flags())
         _really_makedirs(self._logs_dir)
+
         self.test_original_source_path = _pytest_get_test_root()
         self.test_root_dir = self._generate_test_root_dir()
 
@@ -243,7 +258,7 @@ class DBTIntegrationTest(unittest.TestCase):
             'version': '1.0',
             'config-version': 2,
             'test-paths': [],
-            'source-paths': [self.models],
+            'model-paths': [self.models],
             'profile': 'test',
         }
 
@@ -265,7 +280,11 @@ class DBTIntegrationTest(unittest.TestCase):
         if not os.path.exists(self.test_root_dir):
             os.makedirs(self.test_root_dir)
 
-        flags.PROFILES_DIR = self.test_root_dir
+        from dbt.flags import set_from_args
+        from argparse import Namespace
+
+        set_from_args(Namespace(**{'PROFILES_DIR': self.test_root_dir}), None)
+
         profiles_path = os.path.join(self.test_root_dir, 'profiles.yml')
         with open(profiles_path, 'w') as f:
             yaml.safe_dump(profile_config, f, default_flow_style=True)
@@ -290,8 +309,13 @@ class DBTIntegrationTest(unittest.TestCase):
             'profile': None,
             'profiles_dir': self.test_root_dir,
             'target': None,
+            'threads': 1,
         }
 
+        from dbt.flags import set_from_args
+        from argparse import Namespace
+
+        set_from_args(Namespace(**kwargs), None)
         config = RuntimeConfig.from_args(TestArgs(kwargs))
 
         register_adapter(config)
@@ -371,7 +395,8 @@ class DBTIntegrationTest(unittest.TestCase):
 
     def run_dbt_and_capture(self, *args, **kwargs):
         try:
-            stringbuf = capture_stdout_logs()
+            stringbuf = StringIO()
+            capture_stdout_logs(stringbuf)
             res = self.run_dbt(*args, **kwargs)
             stdout = stringbuf.getvalue()
 
@@ -385,19 +410,22 @@ class DBTIntegrationTest(unittest.TestCase):
         if args is None:
             args = ["run"]
 
-        final_args = []
+        logger.info("Running dbt with profiles_dir={}".format(profiles_dir))
 
-        if os.getenv('DBT_TEST_SINGLE_THREADED') in ('y', 'Y', '1'):
-            final_args.append('--single-threaded')
+        if profiles_dir and "--profiles-dir" not in args:
+            args.extend(["--profiles-dir", self.test_root_dir])
 
-        final_args.extend(args)
+        args.extend(["--log-cache-events"])
 
-        if profiles_dir:
-            final_args.extend(['--profiles-dir', self.test_root_dir])
-        final_args.append('--log-cache-events')
+        logger.info("Invoking dbt with {}".format(args))
 
-        logger.info("Invoking dbt with {}".format(final_args))
-        return dbt.handle_and_check(final_args)
+        dbt = dbtRunner()
+        res = dbt.invoke(args)
+
+        if res.exception is not None:
+            raise res.exception
+
+        return res.result, res.success
 
     def run_sql_file(self, path, kwargs=None):
         with open(path, 'r') as f:

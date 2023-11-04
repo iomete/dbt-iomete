@@ -1,6 +1,6 @@
 target:
   type: iomete
-  https: false
+  https: "{{ env_var('DBT_IOMETE_HTTPS') }}"
   host: "{{ env_var('DBT_IOMETE_HOST') }}"
   lakehouse: "{{ env_var('DBT_IOMETE_LAKEHOUSE') }}"
   user: "{{ env_var('DBT_IOMETE_USER_NAME') }}"

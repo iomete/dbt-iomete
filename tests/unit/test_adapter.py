@@ -1,11 +1,8 @@
 import unittest
-from unittest import mock
 
 import dbt.flags as flags
-from dbt.exceptions import RuntimeException
-from agate import Row
-from pyhive import hive
-from dbt.adapters.iomete import SparkAdapter, SparkRelation
+from dbt.exceptions import DbtRuntimeError
+from dbt.adapters.iomete import SparkAdapter
 from .utils import config_from_parts_or_dicts
 
 
@@ -47,10 +44,9 @@ class TestSparkAdapter(unittest.TestCase):
         adapter = SparkAdapter(config)
         # fine
         adapter.Relation.create(schema='different', identifier='table')
-        with self.assertRaises(RuntimeException):
+        with self.assertRaises(DbtRuntimeError):
             # not fine - database set
-            adapter.Relation.create(
-                database='something', schema='different', identifier='table')
+            adapter.Relation.create(database='something', schema='different', identifier='table')
 
     def test_profile_with_database(self):
         profile = {
@@ -68,5 +64,5 @@ class TestSparkAdapter(unittest.TestCase):
             },
             'target': 'test'
         }
-        with self.assertRaises(RuntimeException):
+        with self.assertRaises(DbtRuntimeError):
             config_from_parts_or_dicts(self.project_cfg, profile)

@@ -37,15 +37,21 @@ def mock_connection(name, state='open'):
     return conn
 
 
-def profile_from_dict(profile, profile_name, cli_vars='{}'):
+def profile_from_dict(profile, profile_name, cli_vars={}):
     from dbt.config import Profile
     from dbt.config.renderer import ProfileRenderer
-    from dbt.context.base import generate_base_context
     from dbt.config.utils import parse_cli_vars
     if not isinstance(cli_vars, dict):
         cli_vars = parse_cli_vars(cli_vars)
 
     renderer = ProfileRenderer(cli_vars)
+
+    # in order to call dbt's internal profile rendering, we need to set the
+    # flags global. This is a bit of a hack, but it's the best way to do it.
+    from dbt.flags import set_from_args
+    from argparse import Namespace
+
+    set_from_args(Namespace(), None)
     return Profile.from_raw_profile_info(
         profile,
         profile_name,
@@ -53,9 +59,7 @@ def profile_from_dict(profile, profile_name, cli_vars='{}'):
     )
 
 
-def project_from_dict(project, profile, packages=None, selectors=None, cli_vars='{}'):
-    from dbt.context.target import generate_target_context
-    from dbt.config import Project
+def project_from_dict(project, profile, packages=None, selectors=None, cli_vars={}):
     from dbt.config.renderer import DbtProjectYamlRenderer
     from dbt.config.utils import parse_cli_vars
     if not isinstance(cli_vars, dict):
@@ -74,8 +78,7 @@ def project_from_dict(project, profile, packages=None, selectors=None, cli_vars=
     return partial.render(renderer)
 
 
-
-def config_from_parts_or_dicts(project, profile, packages=None, selectors=None, cli_vars='{}'):
+def config_from_parts_or_dicts(project, profile, packages=None, selectors=None, cli_vars={}):
     from dbt.config import Project, Profile, RuntimeConfig
     from copy import deepcopy
 
@@ -155,7 +158,7 @@ class ContractTestCase(TestCase):
         if cls is None:
             cls = self.ContractType
         cls.validate(dct)
-        self.assertEqual(cls.from_dict(dct),  obj)
+        self.assertEqual(cls.from_dict(dct), obj)
 
     def assert_symmetric(self, obj, dct, cls=None):
         self.assert_to_dict(obj, dct)
@@ -178,7 +181,7 @@ def compare_dicts(dict1, dict2):
     common_keys = set(first_set).intersection(set(second_set))
     found_differences = False
     for key in common_keys:
-        if dict1[key] != dict2[key] :
+        if dict1[key] != dict2[key]:
             print(f"--- --- first dict: {key}: {str(dict1[key])}")
             print(f"--- --- second dict: {key}: {str(dict2[key])}")
             found_differences = True
@@ -355,10 +358,9 @@ def MockDocumentation(package, name, **kwargs):
     return doc
 
 
-def load_internal_manifest_macros(config, macro_hook = lambda m: None):
+def load_internal_manifest_macros(config, macro_hook=lambda m: None):
     from dbt.parser.manifest import ManifestLoader
     return ManifestLoader.load_macros(config, macro_hook)
-
 
 
 def dict_replace(dct, **kwargs):
