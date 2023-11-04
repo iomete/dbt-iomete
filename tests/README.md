@@ -3,11 +3,11 @@
 
 ## Set environment variables
 ```bash
-export DBT_IOMETE_HOST=4.236.193.224
-export DBT_IOMETE_PORT=80
-export DBT_IOMETE_LAKEHOUSE=dbt
-export DBT_IOMETE_USER_NAME=admin
-export DBT_IOMETE_TOKEN=OzM3t8qCilXaeEWlc7rAMKE2Phex4YJh8NEshziwil4=
+export DBT_IOMETE_HOST=dev.iomete.com;
+export DBT_IOMETE_PORT=443;
+export DBT_IOMETE_LAKEHOUSE=lakehouse;
+export DBT_IOMETE_USER_NAME=fuad;
+export DBT_IOMETE_TOKEN=mjbwx2OntziNfv2VQCiltnSLQTrcbAaZFQwRhc6aUo0=;
 ```
 
 ## Run integration test

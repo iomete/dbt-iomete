@@ -1,13 +1,14 @@
 from concurrent.futures import Future
 from dataclasses import dataclass
-from typing import Optional, List, Dict, Any, Union, Iterable
+from typing import Optional, List, Dict, Any, Union, Iterable, Type
 import agate
+from dbt.contracts.connection import AdapterResponse
 from dbt.contracts.relation import RelationType
 
 import dbt
 import dbt.exceptions
 
-from dbt.adapters.base import AdapterConfig
+from dbt.adapters.base import AdapterConfig, PythonJobHelper
 from dbt.adapters.base.impl import catch_as_completed
 from dbt.adapters.sql import SQLAdapter
 from dbt.adapters.iomete import SparkConnectionManager
@@ -19,6 +20,7 @@ from dbt.events import AdapterLogger
 from dbt.utils import executor
 import sentry_sdk
 
+from dbt.adapters.iomete.python_job import IometeSparkJobHelper
 from dbt.adapters.iomete.schema_service import SchemaService
 
 logger = AdapterLogger("iomete")
@@ -191,13 +193,6 @@ class SparkAdapter(SQLAdapter):
             as_dict['table_database'] = None
             yield as_dict
 
-    def get_properties(self, relation: Relation) -> Dict[str, str]:
-        properties = self.execute_macro(
-            FETCH_TBL_PROPERTIES_MACRO_NAME,
-            kwargs={'relation': relation}
-        )
-        return dict(properties)
-
     def get_catalog(self, manifest):
 
         schema_map = self._get_catalog_schemas(manifest)
@@ -279,6 +274,42 @@ class SparkAdapter(SQLAdapter):
         )
 
         return sql
+
+    @property
+    def python_submission_helpers(self) -> Dict[str, Type[PythonJobHelper]]:
+        return {
+            "spark_job": IometeSparkJobHelper,
+        }
+
+    @property
+    def default_python_submission_method(self) -> str:
+        return "spark_job"
+
+    def generate_python_submission_response(self, submission_result: Any) -> AdapterResponse:
+        return AdapterResponse(_message="OK")
+
+    # In original implementation handle.commit() and handle.rollback() are called.
+    # Since spark doesn't support transactions, this implementation is a no-op.
+    def run_sql_for_tests(self, sql, fetch, conn):
+        cursor = conn.handle.cursor()
+        try:
+            cursor.execute(sql)
+            if fetch == "one":
+                if hasattr(cursor, "fetchone"):
+                    return cursor.fetchone()
+                else:
+                    # AttributeError: 'PyhiveConnectionWrapper' object has no attribute 'fetchone'
+                    return cursor.fetchall()[0]
+            elif fetch == "all":
+                return cursor.fetchall()
+            else:
+                return
+        except BaseException as e:
+            print(sql)
+            print(e)
+            raise
+        finally:
+            conn.transaction_open = False
 
 
 # spark does something interesting with joins when both tables have the same
