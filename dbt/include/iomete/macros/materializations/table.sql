@@ -1,4 +1,5 @@
-{% materialization table, adapter = 'iomete' %}
+{% materialization table, adapter = 'iomete', supported_languages=['sql', 'python'] %}
+  {%- set language = model['language'] -%}
   {%- set identifier = model['alias'] -%}
 
   {%- set old_relation = adapter.get_relation(database=database, schema=schema, identifier=identifier) -%}
@@ -20,9 +21,9 @@
   {%- endif %}
 
   -- build model
-  {% call statement('main') -%}
-    {{ create_table_as(False, target_relation, sql) }}
-  {%- endcall %}
+  {%- call statement('main', language=language) -%}
+    {{ create_table_as(False, target_relation, compiled_code, language) }}
+  {%- endcall -%}
   
   {% do persist_docs(target_relation, model) %}
 
@@ -31,3 +32,18 @@
   {{ return({'relations': [target_relation]})}}
 
 {% endmaterialization %}
+
+
+{% macro py_write_table(compiled_code, target_relation) %}
+from pyspark.sql import SparkSession
+spark = SparkSession.builder.appName('dbtModels').getOrCreate()
+
+{{ compiled_code }}
+
+dbt = dbtObj(spark.read.format("iceberg").load)
+df = model(dbt, spark)
+
+import pyspark
+
+df.write.mode("overwrite").format("iceberg").option("overwriteSchema", "true").saveAsTable("{{ target_relation }}")
+{%- endmacro -%}

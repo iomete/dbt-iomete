@@ -24,7 +24,8 @@ NUMBERS = DECIMALS + (int, float)
 
 @dataclass
 class SparkCredentials(Credentials):
-    database: Optional[str]
+    database: Optional[str] = None  # type: ignore
+    schema: Optional[str] = None  # type: ignore
     https: bool = True
     host: Optional[str] = None
     port: int = 443
@@ -49,7 +50,7 @@ class SparkCredentials(Credentials):
                 self.database is not None and
                 self.database != self.schema
         ):
-            raise dbt.exceptions.RuntimeException(
+            raise dbt.exceptions.DbtRuntimeError(
                 f'    schema: {self.schema} \n'
                 f'    database: {self.database} \n'
                 f'On iomete, database must be omitted or have the same value as'
@@ -159,14 +160,14 @@ class PyhiveConnectionWrapper(object):
         if poll_state.errorMessage:
             logger.debug("Poll response: {}".format(poll_state))
             logger.debug("Poll status: {}".format(state))
-            dbt.exceptions.raise_database_error(poll_state.errorMessage)
+            dbt.exceptions.DbtDatabaseError(poll_state.errorMessage)
 
         elif state not in STATE_SUCCESS:
             status_type = ThriftState._VALUES_TO_NAMES.get(
                 state,
                 'Unknown<{!r}>'.format(state))
 
-            dbt.exceptions.raise_database_error(
+            dbt.exceptions.DbtDatabaseError(
                 "Query failed with status: {}".format(status_type))
 
         logger.debug("Poll status: {}, query complete".format(state))
@@ -204,9 +205,9 @@ class SparkConnectionManager(SQLConnectionManager):
             thrift_resp = exc.args[0]
             if hasattr(thrift_resp, 'status'):
                 msg = thrift_resp.status.errorMessage
-                raise dbt.exceptions.RuntimeException(msg)
+                raise dbt.exceptions.DbtRuntimeError(msg)
             else:
-                raise dbt.exceptions.RuntimeException(str(exc))
+                raise dbt.exceptions.DbtRuntimeError(str(exc))
 
     def cancel(self, connection):
         connection.handle.cancel()
@@ -272,7 +273,7 @@ class SparkConnectionManager(SQLConnectionManager):
                     # Perhaps a password is invalid, or something
                     msg = 'Failed to connect. Make sure lakehouse is in non-terminated state ' \
                           'and credentials (user/password) are correct'
-                    raise dbt.exceptions.FailedToConnectException(msg) from e
+                    raise dbt.exceptions.FailedToConnectError(msg) from e
                 retryable_message = _is_retryable_error(e)
                 if retryable_message and creds.connect_retries > 0:
                     msg = (
@@ -293,7 +294,7 @@ class SparkConnectionManager(SQLConnectionManager):
                     logger.warning(msg)
                     time.sleep(creds.connect_timeout)
                 else:
-                    raise dbt.exceptions.FailedToConnectException(
+                    raise dbt.exceptions.FailedToConnectError(
                         'Failed to connect! Make sure host, port, protocol (https/http) is correct!'
                     ) from e
         else:

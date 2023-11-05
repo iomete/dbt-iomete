@@ -1,4 +1,4 @@
-{% materialization incremental, adapter='iomete' -%}
+{% materialization incremental, adapter='iomete', supported_languages=['sql', 'python'] -%}
   
   {#-- Validate early so we don't run SQL if the file_format + strategy combo is invalid --#}
   {%- set raw_file_format = config.get('file_format', default='iceberg') -%}
@@ -9,7 +9,7 @@
   
   {%- set unique_key = config.get('unique_key', none) -%}
   {%- set partition_by = config.get('partition_by', none) -%}
-
+  {%- set language = model['language'] -%}
   {%- set full_refresh_mode = (should_full_refresh()) -%}
   
   {% set on_schema_change = incremental_validate_on_schema_change(config.get('on_schema_change'), default='ignore') %}
@@ -17,6 +17,11 @@
   {% set target_relation = this %}
   {% set existing_relation = load_relation(this) %}
   {% set tmp_relation = make_temp_relation(this) %}
+
+  {#-- for SQL model we will create temp view that doesn't have database and schema --#}
+  {%- if language == 'sql'-%}
+    {%- set tmp_relation = tmp_relation.include(database=false, schema=false) -%}
+  {%- endif -%}
 
   {% if strategy == 'insert_overwrite' and partition_by %}
     {% call statement() %}
@@ -27,17 +32,17 @@
   {{ run_hooks(pre_hooks) }}
 
   {% if existing_relation is none %}
-    {% set build_sql = create_table_as(False, target_relation, sql) %}
+    {% set build_sql = create_table_as(False, target_relation, compiled_code, language) %}
   {% elif existing_relation.is_view or full_refresh_mode %}
     {% do adapter.drop_relation(existing_relation) %}
-    {% set build_sql = create_table_as(False, target_relation, sql) %}
+    {% set build_sql = create_table_as(False, target_relation, compiled_code, language) %}
   {% else %}
-    {% do run_query(create_table_as(True, tmp_relation, sql)) %}
+    {% do run_query(create_table_as(True, tmp_relation, compiled_code, language)) %}
     {% do process_schema_changes(on_schema_change, tmp_relation, existing_relation) %}
     {% set build_sql = dbt_iomete_get_incremental_sql(strategy, tmp_relation, target_relation, unique_key) %}
   {% endif %}
 
-  {%- call statement('main') -%}
+  {%- call statement('main', language=language) -%}
     {{ build_sql }}
   {%- endcall -%}
 

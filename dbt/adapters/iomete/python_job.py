@@ -1,3 +1,5 @@
+import random
+import string
 import time
 from enum import Enum
 
@@ -22,31 +24,33 @@ class IometeSparkJobHelper(PythonJobHelper):
         self.parsed_model = parsed_model
         self.alias = parsed_model["alias"]
         self.schema = parsed_model["schema"]
+
+        self.protocol = 'https://' if credential.https else 'http://'
         self.iom_client = SparkJobApiClient(
-            host=credential.host,
+            host=f"{self.protocol}{credential.host}:{credential.port}",
             api_key=credential.token,
         )
 
     def submit(self, compiled_code: str) -> Any:
+        randomizer = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
         job_response = self._create_job(payload={
             "jobType": "MANUAL",
-            "name": f"dbt-{self.alias}-{uuid.uuid4()}",
+            "name": f"dbt-{self.alias.replace('_', '-')}-{randomizer}",
             "template": {
+                "mainApplicationFile": "local:///app/driver.py",
                 "configMaps": [{
-                    "name": "driver.py",
+                    "key": "driver.py",
                     "mountPath": "/app",
                     "content": compiled_code
                 }]
             }
         })
-        logger.info("Spark job response: %s", job_response)
-        logger.info("Spark job created with job_id: %s", job_response["jobId"])
+        logger.info(f"Spark job created with job_id: {job_response['id']}")
 
-        run_response = self._submit_job_run(job_id=job_response["jobId"], payload={})
-        logger.info("Spark job run response: %s", run_response)
-        logger.info("Spark job run created with run_id: %s", run_response["runId"])
+        run_response = self._submit_job_run(job_id=job_response["id"], payload={})
+        logger.info(f"Spark job run created with run_id: {run_response['id']}")
 
-        self._monitor_state(job_id=job_response["jobId"], run_id=run_response["runId"])
+        self._monitor_state(job_id=job_response["id"], run_id=run_response["id"])
 
     def _create_job(self, payload):
         response = self.iom_client.create_job(payload=payload)
@@ -61,14 +65,14 @@ class IometeSparkJobHelper(PythonJobHelper):
         return response
 
     def _monitor_state(self, job_id, run_id):
-        logger.info("Spark job submitted with job_id: %s", job_id)
+        logger.info(f"Spark job submitted with job_id: {job_id}")
 
         while True:
             app = self._get_job_run(job_id, run_id)
             app_state = _get_state_from_app(app)
             if app_state.is_final:
                 if app_state.is_successful:
-                    logger.info("%s completed successfully.", job_id)
+                    logger.info(f"{job_id} completed successfully.")
                     return
                 else:
                     error_message = "Job {j} failed with terminal state: {s}".format(
@@ -76,8 +80,8 @@ class IometeSparkJobHelper(PythonJobHelper):
                     )
                     raise dbt.exceptions.DbtRuntimeError(error_message)
             else:
-                logger.info("%s in app state: %s", job_id, app_state.value)
-                logger.info("Sleeping for %s seconds.", POLLING_PERIOD_SECONDS)
+                logger.info("{} in app state: {}", job_id, app_state.value)
+                logger.info("Sleeping for {} seconds.", POLLING_PERIOD_SECONDS)
                 time.sleep(POLLING_PERIOD_SECONDS)
 
 

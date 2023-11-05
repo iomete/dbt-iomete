@@ -78,33 +78,43 @@
 
 
 {#-- We can't use temporary tables with `create ... as ()` syntax #}
-{% macro create_temporary_view(relation, sql) -%}
+{% macro create_temporary_view(relation, compiled_code) -%}
   create temporary view {{ relation.include(schema=false) }} as
-    {{ sql }}
+    {{ compiled_code }}
 {% endmacro %}
 
-{% macro iomete__create_table_as(temporary, relation, sql) -%}
+{% macro iomete__create_table_as(temporary, relation, compiled_code, language='sql') -%}
+  {%- if language == 'sql' -%}
+      {% if temporary -%}
+        {{ create_temporary_view(relation, compiled_code) }}
+      {%- else -%}
+        {%- set raw_file_format = config.get('file_format', default='iceberg') -%}
+        {% set is_iceberg_file_format = raw_file_format == 'iceberg' %}
 
-  {% if temporary -%}
-    {{ create_temporary_view(relation, sql) }}
-  {%- else -%}
-    {%- set raw_file_format = config.get('file_format', default='iceberg') -%}
-    {% set is_iceberg_file_format = raw_file_format == 'iceberg' %}
+        {% if is_iceberg_file_format %}
+          create or replace table {{ relation }}
+        {% else %}
+          create table {{ relation }}
+        {% endif %}
+        {{ file_format_clause() }}
+        {{ options_clause() }}
+        {{ partition_cols(label="partitioned by") }}
+        {{ clustered_cols(label="clustered by") }}
+        {{ location_clause() }}
+        {{ comment_clause() }}
+        as
+          {{ compiled_code }}
+      {%- endif %}
+  {%- elif language == 'python' -%}
+    {#--
+    N.B. Python models _can_ write to temp views HOWEVER they use a different session
+    and have already expired by the time they need to be used (I.E. in merges for incremental models)
 
-    {% if is_iceberg_file_format %}
-      create or replace table {{ relation }}
-    {% else %}
-      create table {{ relation }}
-    {% endif %}
-    {{ file_format_clause() }}
-    {{ options_clause() }}
-    {{ partition_cols(label="partitioned by") }}
-    {{ clustered_cols(label="clustered by") }}
-    {{ location_clause() }}
-    {{ comment_clause() }}
-    as
-      {{ sql }}
-  {%- endif %}
+    TODO: Deep dive into spark sessions to see if we can reuse a single session for an entire
+    dbt invocation.
+     --#}
+    {{ py_write_table(compiled_code=compiled_code, target_relation=relation) }}
+  {%- endif -%}
 {%- endmacro -%}
 
 
@@ -149,13 +159,13 @@
 {% macro iomete__rename_relation(from_relation, to_relation) -%}
   {% call statement('rename_relation') -%}
     {% if not from_relation.type %}
-      {% do exceptions.raise_database_error("Cannot rename a relation with a blank type: " ~ from_relation.identifier) %}
+      {% do exceptions.DbtDatabaseError("Cannot rename a relation with a blank type: " ~ from_relation.identifier) %}
     {% elif from_relation.type in ('table') %}
         alter table {{ from_relation }} rename to {{ to_relation }}
     {% elif from_relation.type == 'view' %}
         alter view {{ from_relation }} rename to {{ to_relation }}
     {% else %}
-      {% do exceptions.raise_database_error("Unknown type '" ~ from_relation.type ~ "' for relation: " ~ from_relation.identifier) %}
+      {% do exceptions.DbtDatabaseError("Unknown type '" ~ from_relation.type ~ "' for relation: " ~ from_relation.identifier) %}
     {% endif %}
   {%- endcall %}
 {% endmacro %}

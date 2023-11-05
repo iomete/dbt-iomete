@@ -1,3 +1,4 @@
+import json
 from concurrent.futures import Future
 from dataclasses import dataclass
 from typing import Optional, List, Dict, Any, Union, Iterable, Type
@@ -119,8 +120,8 @@ class SparkAdapter(SQLAdapter):
     def get_relation(
             self, database: str, schema: str, identifier: str
     ) -> Optional[BaseRelation]:
-        if not self.Relation.include_policy.database:
-            database = None
+        if not self.Relation.get_default_include_policy().database:
+            database = None  # type: ignore
 
         return super().get_relation(database, schema, identifier)
 
@@ -170,7 +171,7 @@ class SparkAdapter(SQLAdapter):
                 column_index=idx,
                 dtype=column['data_type'],
             ) for idx, column in enumerate(desc_table_columns)]
-        except dbt.exceptions.RuntimeException as e:
+        except dbt.exceptions.DbtRuntimeError as e:
             # spark would throw error when table doesn't exist, where other
             # CDW would just return and empty list, normalizing the behavior here
             errmsg = getattr(e, "msg", "")
