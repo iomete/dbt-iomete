@@ -24,33 +24,31 @@ class IometeSparkJobHelper(PythonJobHelper):
         self.parsed_model = parsed_model
         self.alias = parsed_model["alias"]
         self.schema = parsed_model["schema"]
-
         self.protocol = 'https://' if credential.https else 'http://'
         self.iom_client = SparkJobApiClient(
             host=f"{self.protocol}{credential.host}:{credential.port}",
             api_key=credential.token,
         )
 
+    @property
+    def job_id(self) -> str:
+        spark_job_id = self.parsed_model["config"].get("spark_job_id")
+        if not spark_job_id:
+            raise ValueError("spark_job_id is required for submitting python models.")
+        return spark_job_id
+
     def submit(self, compiled_code: str) -> Any:
-        randomizer = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
-        job_response = self._create_job(payload={
-            "jobType": "MANUAL",
-            "name": f"dbt-{self.alias.replace('_', '-')}-{randomizer}",
-            "template": {
-                "mainApplicationFile": "local:///app/driver.py",
-                "configMaps": [{
-                    "key": "driver.py",
-                    "mountPath": "/app",
-                    "content": compiled_code
-                }]
-            }
+        config_overrides = self.parsed_model["config"].get("spark_job_overrides", {})
+
+        run_response = self._submit_job_run(job_id=self.job_id, payload={
+            "pythonScript": compiled_code,
+            "arguments": config_overrides.get("arguments", None),
+            "envVars": config_overrides.get("envVars", None),
+            "sparkConf": config_overrides.get("sparkConf", None),
         })
-        logger.info(f"Spark job created with job_id: {job_response['id']}")
+        logger.info(f"Spark job ({self.job_id}) triggered with run_id: {run_response['id']}")
 
-        run_response = self._submit_job_run(job_id=job_response["id"], payload={})
-        logger.info(f"Spark job run created with run_id: {run_response['id']}")
-
-        self._monitor_state(job_id=job_response["id"], run_id=run_response["id"])
+        self._monitor_state(job_id=self.job_id, run_id=run_response["id"])
 
     def _create_job(self, payload):
         response = self.iom_client.create_job(payload=payload)

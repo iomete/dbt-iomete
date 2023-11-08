@@ -12,8 +12,6 @@ from io import StringIO
 import yaml
 from unittest.mock import patch
 
-import dbt
-from dbt import flags
 from dbt.cli.main import dbtRunner
 from dbt.deprecations import reset_deprecations
 from dbt.adapters.factory import get_adapter, reset_adapters, register_adapter
@@ -158,7 +156,7 @@ class DBTIntegrationTest(unittest.TestCase):
                 'outputs': {
                     'thrift': {
                         'type': 'iomete',
-                        'https': True,
+                        'https': os.getenv('DBT_IOMETE_HTTPS', 'False') == 'true',
                         'host': os.getenv('DBT_IOMETE_HOST'),
                         'lakehouse': os.getenv('DBT_IOMETE_LAKEHOUSE'),
                         'user': os.getenv('DBT_IOMETE_USER_NAME'),
@@ -193,31 +191,31 @@ class DBTIntegrationTest(unittest.TestCase):
         return normalize(tempfile.mkdtemp(prefix='dbt-int-test-'))
 
     def setUp(self):
-        self.dbt_core_install_root = os.path.dirname(dbt.__file__)
+        # self.dbt_core_install_root = os.path.dirname(dbt.__file__)
         log_manager.reset_handlers()
         self.initial_dir = INITIAL_ROOT
         os.chdir(self.initial_dir)
         # before we go anywhere, collect the initial path info
         self._logs_dir = os.path.join(self.initial_dir, 'logs', self.prefix)
 
-        from dbt.flags import set_from_args
+        from dbt.flags import set_from_args, get_flags
         from argparse import Namespace
 
-        flags.LOG_PATH = self._logs_dir
-        flags.LOG_LEVEL = "info"
-        flags.LOG_FORMAT = "text"
-        flags.QUIET = False
-        flags.DEBUG = False
-        flags.USE_COLORS = False
-        flags.LOG_CACHE_EVENTS = False
-        flags.LOG_LEVEL_FILE = "info"
-        flags.LOG_FORMAT_FILE = "text"
-        flags.USE_COLORS_FILE = False
-        flags.LOG_FILE_MAX_BYTES = 100000000
+        set_from_args(Namespace(**{
+            "LOG_PATH": self._logs_dir,
+            "LOG_LEVEL": "info",
+            "LOG_FORMAT": "text",
+            "QUIET": False,
+            "DEBUG": False,
+            "USE_COLORS": False,
+            "LOG_CACHE_EVENTS": False,
+            "LOG_LEVEL_FILE": "info",
+            "LOG_FORMAT_FILE": "text",
+            "USE_COLORS_FILE": False,
+            "LOG_FILE_MAX_BYTES": 100000000,
+        }), None)
 
-        set_from_args(Namespace(), None)
-
-        setup_event_logger(flags)
+        setup_event_logger(get_flags())
         _really_makedirs(self._logs_dir)
 
         self.test_original_source_path = _pytest_get_test_root()
@@ -282,7 +280,11 @@ class DBTIntegrationTest(unittest.TestCase):
         if not os.path.exists(self.test_root_dir):
             os.makedirs(self.test_root_dir)
 
-        flags.PROFILES_DIR = self.test_root_dir
+        from dbt.flags import set_from_args
+        from argparse import Namespace
+
+        set_from_args(Namespace(**{'PROFILES_DIR': self.test_root_dir}), None)
+
         profiles_path = os.path.join(self.test_root_dir, 'profiles.yml')
         with open(profiles_path, 'w') as f:
             yaml.safe_dump(profile_config, f, default_flow_style=True)
@@ -408,27 +410,22 @@ class DBTIntegrationTest(unittest.TestCase):
         if args is None:
             args = ["run"]
 
-        final_args = []
+        logger.info("Running dbt with profiles_dir={}".format(profiles_dir))
 
-        if os.getenv('DBT_TEST_SINGLE_THREADED') in ('y', 'Y', '1'):
-            final_args.append('--single-threaded')
+        if profiles_dir and "--profiles-dir" not in args:
+            args.extend(["--profiles-dir", self.test_root_dir])
 
-        final_args.extend(args)
+        args.extend(["--log-cache-events"])
 
-        if profiles_dir:
-            final_args.extend(['--profiles-dir', self.test_root_dir])
-        final_args.append('--log-cache-events')
+        logger.info("Invoking dbt with {}".format(args))
 
-        logger.info("Invoking dbt with {}".format(final_args))
+        dbt = dbtRunner()
+        res = dbt.invoke(args)
 
-        dbt_runner = dbtRunner()
-        dbt_runner_result = dbt_runner.invoke(final_args)
+        if res.exception is not None:
+            raise res.exception
 
-        logger.info("dbt_runner_result result object {}".format(dbt_runner_result.result))
-        logger.info("dbt_runner_result success {}".format(dbt_runner_result.success))
-        logger.info("dbt_runner_result exception {}".format(dbt_runner_result.exception))
-
-        return dbt_runner_result.result, dbt_runner_result.success
+        return res.result, res.success
 
     def run_sql_file(self, path, kwargs=None):
         with open(path, 'r') as f:
