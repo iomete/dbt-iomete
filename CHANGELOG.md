@@ -1,6 +1,9 @@
+## dbt-iomete 1.7.3 (Oct 10, 2024)
+- Added Data Plane parameter for profile
+
 ## dbt-iomete 1.7.2 (Nov 24, 2023)
 - Minor fixes in incremental executions.
-- 
+
 ## dbt-iomete 1.7.1 (Nov 14, 2023)
 - `dbt` version upgraded to 1.7.0
 - Added support to python models
