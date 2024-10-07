@@ -29,6 +29,7 @@ class TestSparkAdapter(unittest.TestCase):
                 'test': {
                     'type': 'iomete',
                     'host': 'iomete.com',
+                    'dataplane': 'spark-resource',
                     'lakehouse': 'dbt',
                     'user': 'user1',
                     'token': 'abc123',

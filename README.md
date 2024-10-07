@@ -45,6 +45,7 @@ iomete:
       host: <host>
       port: 443
       https: true # or http
+      dataplane: <iomete_dataplane>
       lakehouse: <serverless_lakehouse_name>
       schema: <database_name>
       user: "{{ env_var('DBT_IOMETE_USER_NAME') }}"

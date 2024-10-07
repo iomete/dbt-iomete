@@ -9,6 +9,8 @@ prompts:
   https:
     hint: "Connection is https. Set to false for http."
     default: true
+  dataplane:
+    hint: "dataplane name that dbt will connect"
   lakehouse:
     hint: "lakehouse name that dbt will connect"
   schema:

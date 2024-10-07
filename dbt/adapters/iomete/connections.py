@@ -29,6 +29,7 @@ class SparkCredentials(Credentials):
     https: bool = True
     host: Optional[str] = None
     port: int = 443
+    dataplane: Optional[str] = None
     lakehouse: Optional[str] = None
     user: Optional[str] = None
     token: Optional[str] = None
@@ -68,10 +69,10 @@ class SparkCredentials(Credentials):
 
     @property
     def unique_field(self):
-        return f"{self.scheme}://{self.host}:{self.port}/lakehouse/{self.lakehouse}"
+        return f"{self.scheme}://{self.host}:{self.port}/dataplane/{self.dataplane}/lakehouse/{self.lakehouse}"
 
     def _connection_keys(self):
-        return 'host', 'port', 'lakehouse', 'schema'
+        return 'host', 'port','dataplane', 'lakehouse', 'schema'
 
 
 class PyhiveConnectionWrapper(object):
@@ -254,7 +255,7 @@ class SparkConnectionManager(SQLConnectionManager):
 
         for i in range(1 + creds.connect_retries):
             try:
-                cls.validate_creds(creds, ['host', 'port', 'user', 'token', 'lakehouse'])
+                cls.validate_creds(creds, ['host', 'port', 'user', 'token', 'lakehouse', 'dataplane'])
                 conn = hive.connect(
                     scheme=creds.scheme,
                     host=creds.host,
@@ -262,7 +263,8 @@ class SparkConnectionManager(SQLConnectionManager):
                     lakehouse=creds.lakehouse,
                     database="default",
                     username=creds.user,
-                    password=creds.token
+                    password=creds.token,
+                    data_plane=creds.dataplane
                 )
                 handle = PyhiveConnectionWrapper(conn)
                 break

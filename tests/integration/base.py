@@ -158,6 +158,7 @@ class DBTIntegrationTest(unittest.TestCase):
                         'type': 'iomete',
                         'https': os.getenv('DBT_IOMETE_HTTPS', 'False') == 'true',
                         'host': os.getenv('DBT_IOMETE_HOST'),
+                        'dataplane': os.getenv('DBT_IOMETE_DATAPLANE'),
                         'lakehouse': os.getenv('DBT_IOMETE_LAKEHOUSE'),
                         'user': os.getenv('DBT_IOMETE_USER_NAME'),
                         'token': os.getenv('DBT_IOMETE_TOKEN'),
