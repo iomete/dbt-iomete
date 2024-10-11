@@ -27,7 +27,7 @@ from dbt.contracts.graph.manifest import Manifest
 
 logger = AdapterLogger("iomete")
 
-INITIAL_ROOT = os.getcwd()
+INITIAL_ROOT = '/Users/alokhp/PycharmProjects/dbt-iomete/'
 
 
 def normalize(path):
@@ -195,6 +195,7 @@ class DBTIntegrationTest(unittest.TestCase):
         # self.dbt_core_install_root = os.path.dirname(dbt.__file__)
         log_manager.reset_handlers()
         self.initial_dir = INITIAL_ROOT
+        print(self.initial_dir, "   THIS IS WHERE IT IS GETTING SET TO")
         os.chdir(self.initial_dir)
         # before we go anywhere, collect the initial path info
         self._logs_dir = os.path.join(self.initial_dir, 'logs', self.prefix)
@@ -372,9 +373,29 @@ class DBTIntegrationTest(unittest.TestCase):
     def _drop_schemas(self):
         with self.adapter.connection_named('__test'):
             schema = self.unique_schema()
-            self._drop_schema_named(self.default_database, schema)
+            self._drop_schema_cascade(self.default_database, schema)
             if self.setup_alternate_db and self.alternative_database:
-                self._drop_schema_named(self.alternative_database, schema)
+                self._drop_schema_cascade(self.alternative_database, schema)
+
+    def _drop_schema_cascade(self, database, schema):
+        available_schemas = self._get_schemas()
+        if schema in available_schemas:
+            self._drop_tables_views_in_schema(database, schema)
+            self._drop_schema_named(database, schema)
+
+    def _drop_tables_views_in_schema(self, database, schema):
+        views = self._get_views_in_schema(schema)
+        for view in views:
+            self._drop_view(database,schema,view)
+        tables = self._get_tables_in_schema(schema)
+        for table in tables:
+            self._drop_table(database,schema,table)
+
+    def _drop_table(self, database, schema, table):
+        self.run_sql(f'DROP TABLE IF EXISTS {schema}.{table}')
+
+    def _drop_view(self, database, schema, view):
+        self.run_sql(f'DROP VIEW IF EXISTS {schema}.{view}')
 
     @property
     def project_config(self):
@@ -469,10 +490,6 @@ class DBTIntegrationTest(unittest.TestCase):
                 else:
                     # we have to fetch.
                     cursor.fetchall()
-            except Exception as e:
-                # hacks for dropping schema
-                if "No results.  Previous SQL was not a query." not in str(e):
-                    raise e
             except Exception as e:
                 conn.handle.rollback()
                 conn.transaction_open = False
@@ -843,6 +860,17 @@ class DBTIntegrationTest(unittest.TestCase):
                                     end.strftime(datefmt))
                                 )
 
+    def _get_views_in_schema(self, schema):
+        result = self.run_sql(f'show views in {schema}', fetch='all')
+        return [view for (_, view, _) in result]
+
+    def _get_tables_in_schema(self, schema):
+        result = self.run_sql(f'show tables in {schema}', fetch='all')
+        return [table for (_, table, _) in result]
+
+    def _get_schemas(self):
+        result = self.run_sql('SHOW DATABASES', fetch='all')
+        return [row[0] for row in result]
 
 class AnyFloat:
     """Any float. Use this in assertEqual() calls to assert that it is a float.
