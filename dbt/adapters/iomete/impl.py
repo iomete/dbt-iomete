@@ -150,7 +150,7 @@ class SparkAdapter(SQLAdapter):
             table_stats=None,
             column=column["name"],
             column_index=idx,
-            dtype=column['fieldType'],
+            dtype=column['type'],
         ) for idx, column in enumerate(table_fields or [])]
 
     def _get_columns_of_temp_table(self, relation: Relation) -> List[SparkColumn]:

@@ -139,7 +139,7 @@
 
 {% macro describe_temp_view(relation) %}
   {% call statement('describe_temp_view', fetch_result=True) -%}
-    describe table {{ relation.include(schema=False) }}
+    describe {{ relation.include(schema=False) }}
   {% endcall %}
 
   {% do return(load_result('describe_temp_view').table) %}

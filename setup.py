@@ -73,9 +73,9 @@ setup(
     install_requires=[
         "dbt-core~={}".format(dbt_core_version),
         "sqlparams>=3.0.0",
-        "py-hive-iomete>=2.1.0",
+        "py-hive-iomete>=2.1.2",
         "sentry-sdk==1.11.1",
-        "iomete-sdk==2.0.0"
+        "iomete-sdk==2.1.2"
     ],
     zip_safe=False,
     classifiers=[
