@@ -5,6 +5,7 @@ import sys
 import tempfile
 import traceback
 import unittest
+import time
 from contextlib import contextmanager
 from datetime import datetime
 from io import StringIO
@@ -156,9 +157,11 @@ class DBTIntegrationTest(unittest.TestCase):
                 'outputs': {
                     'thrift': {
                         'type': 'iomete',
+                        'threads': 10,
                         'https': os.getenv('DBT_IOMETE_HTTPS', 'False') == 'true',
                         'host': os.getenv('DBT_IOMETE_HOST'),
                         'dataplane': os.getenv('DBT_IOMETE_DATAPLANE'),
+                        'domain': os.getenv('DBT_IOMETE_DOMAIN'),
                         'lakehouse': os.getenv('DBT_IOMETE_LAKEHOUSE'),
                         'user': os.getenv('DBT_IOMETE_USER_NAME'),
                         'token': os.getenv('DBT_IOMETE_TOKEN'),
@@ -195,7 +198,6 @@ class DBTIntegrationTest(unittest.TestCase):
         # self.dbt_core_install_root = os.path.dirname(dbt.__file__)
         log_manager.reset_handlers()
         self.initial_dir = INITIAL_ROOT
-        print(self.initial_dir, "   THIS IS WHERE IT IS GETTING SET TO")
         os.chdir(self.initial_dir)
         # before we go anywhere, collect the initial path info
         self._logs_dir = os.path.join(self.initial_dir, 'logs', self.prefix)
@@ -617,6 +619,9 @@ class DBTIntegrationTest(unittest.TestCase):
 
         relation_a = self._make_relation(table_a, table_a_schema, table_a_db)
         relation_b = self._make_relation(table_b, table_b_schema, table_b_db)
+
+        # Temp fix to get fresh table metadata
+        time.sleep(30)
 
         self._assertTableColumnsEqual(relation_a, relation_b)
 

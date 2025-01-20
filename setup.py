@@ -71,11 +71,12 @@ setup(
     packages=find_namespace_packages(include=["dbt", "dbt.*"]),
     include_package_data=True,
     install_requires=[
+        "protobuf==4.25.5",
         "dbt-core~={}".format(dbt_core_version),
         "sqlparams>=3.0.0",
-        "py-hive-iomete>=2.1.2",
-        "sentry-sdk==1.11.1",
-        "iomete-sdk==2.1.2"
+        "py-hive-iomete>=2.1.3",
+        "sentry-sdk==2.20.0",
+        "iomete-sdk==3.0.0"
     ],
     zip_safe=False,
     classifiers=[
@@ -87,6 +88,8 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
     ],
     python_requires=">=3.7",
 )
