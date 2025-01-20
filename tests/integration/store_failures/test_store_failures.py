@@ -18,6 +18,7 @@ class TestStoreFailures(DBTIntegrationTest):
                 '+store_failures': True,
                 '+severity': 'warn',
                 '+file_format': 'parquet',
+                '+schema': None  # store failures in the default schema
             }
         }
 
@@ -34,7 +35,8 @@ class TestStoreFailuresIceberg(TestStoreFailures):
             'config-version': 2,
             'tests': {
                 '+store_failures': True,
-                '+severity': 'warn'
+                '+severity': 'warn',
+                '+schema': None  # store failures in the default schema
             }
         }
 

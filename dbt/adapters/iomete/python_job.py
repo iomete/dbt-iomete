@@ -28,6 +28,7 @@ class IometeSparkJobHelper(PythonJobHelper):
         self.iom_client = SparkJobApiClient(
             host=f"{self.protocol}{credential.host}:{credential.port}",
             api_key=credential.token,
+            domain=credential.domain
         )
 
     @property
@@ -88,12 +89,17 @@ def _get_state_from_app(app):
 
 
 class ApplicationStateType(Enum):
-    EmptyState = ""
-    DeployingState = "STARTING"  # Usually takes ~1 min
+    EmptyState = "ENQUEUED"
+    DeployingState = "SUBMITTED"
     RunningState = "RUNNING"
     CompletedState = "COMPLETED"
     FailedState = "FAILED"
     AbortedState = "ABORTED"
+    AbortingState = "ABORTING"
+    ExecutorState = map(
+        {"RUNNING": 1},
+        {"PENDING": 1},
+    )
 
     @property
     def is_final(self) -> bool:

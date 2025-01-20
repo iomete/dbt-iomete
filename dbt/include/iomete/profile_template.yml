@@ -11,6 +11,8 @@ prompts:
     default: true
   dataplane:
     hint: "dataplane name that dbt will connect"
+  domain:
+    hint: "domain name that dbt will connect"
   lakehouse:
     hint: "lakehouse name that dbt will connect"
   schema:

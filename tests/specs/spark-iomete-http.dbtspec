@@ -3,6 +3,7 @@ target:
   https: "{{ env_var('DBT_IOMETE_HTTPS') }}"
   host: "{{ env_var('DBT_IOMETE_HOST') }}"
   dataplane: "{{ env_var('DBT_IOMETE_DATAPLANE')  }}"
+  domain: "{{ env_var('DBT_IOMETE_DOMAIN')  }}"
   lakehouse: "{{ env_var('DBT_IOMETE_LAKEHOUSE') }}"
   user: "{{ env_var('DBT_IOMETE_USER_NAME') }}"
   token: "{{ env_var('DBT_IOMETE_TOKEN') }}"
