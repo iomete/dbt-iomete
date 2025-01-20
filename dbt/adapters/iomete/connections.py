@@ -30,6 +30,7 @@ class SparkCredentials(Credentials):
     host: Optional[str] = None
     port: int = 443
     dataplane: Optional[str] = None
+    domain: Optional[str] = None
     lakehouse: Optional[str] = None
     user: Optional[str] = None
     token: Optional[str] = None

@@ -79,7 +79,12 @@
 
 {#-- We can't use temporary tables with `create ... as ()` syntax #}
 {% macro create_temporary_view(relation, compiled_code) -%}
-  create temporary view {{ relation.include(schema=false) }} as
+  {% set tmp_identifier = relation.identifier.split(".").pop() %}
+  {% set tmp_relation = relation.incorporate(path = {
+      "identifier": tmp_identifier,
+      "schema": None
+  }) -%}
+  create or replace global temporary view {{ tmp_relation }} as
     {{ compiled_code }}
 {% endmacro %}
 
@@ -207,7 +212,7 @@
 
 
 {% macro iomete__make_temp_relation(base_relation, suffix) %}
-    {% set tmp_identifier = base_relation.identifier ~ suffix %}
+    {% set tmp_identifier = 'global_temp.' ~ base_relation.identifier ~ suffix %}
     {% set tmp_relation = base_relation.incorporate(path = {
         "identifier": tmp_identifier,
         "schema": None

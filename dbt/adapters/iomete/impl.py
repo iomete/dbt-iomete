@@ -5,6 +5,7 @@ from typing import Optional, List, Dict, Any, Union, Iterable, Type
 import agate
 from dbt.contracts.connection import AdapterResponse
 from dbt.contracts.relation import RelationType
+from dbt.context.exceptions_jinja import raise_compiler_error
 
 import dbt
 import dbt.exceptions
@@ -22,7 +23,7 @@ from dbt.utils import executor
 import sentry_sdk
 
 from dbt.adapters.iomete.python_job import IometeSparkJobHelper
-from dbt.adapters.iomete.schema_service import SchemaService
+from dbt.adapters.iomete.schema_service import SchemaService, IOMETE_DEFAULT_CATALOG_NAME
 
 logger = AdapterLogger("iomete")
 
@@ -104,14 +105,15 @@ class SparkAdapter(SQLAdapter):
                 rel_type = RelationType.View
 
             provider = table['provider'].lower() if table['provider'] else None
+            schema = table['namespace'] if table['catalog'] == IOMETE_DEFAULT_CATALOG_NAME else f"{table['catalog']}.{table['namespace']}"
 
             relation = self.Relation.create(
-                schema=table['namespace'],
+                schema=schema,
                 identifier=table['name'],
                 type=rel_type,
                 provider=provider,
                 is_iceberg=provider == "iceberg",
-                table_fields=table["fields"],
+                table_fields=table["columns"],
             )
             relations.append(relation)
 
@@ -139,7 +141,7 @@ class SparkAdapter(SQLAdapter):
         table_fields = cached_relation.table_fields if cached_relation else None
         if table_fields is None:
             table = self.schema_service.get_table(relation.schema, relation.identifier)
-            table_fields = table["fields"] if table else None
+            table_fields = table["columns"] if table else None
 
         return [SparkColumn(
             table_database=None,
@@ -150,7 +152,7 @@ class SparkAdapter(SQLAdapter):
             table_stats=None,
             column=column["name"],
             column_index=idx,
-            dtype=column['type'],
+            dtype=column["dataType"],
         ) for idx, column in enumerate(table_fields or [])]
 
     def _get_columns_of_temp_table(self, relation: Relation) -> List[SparkColumn]:
@@ -198,7 +200,7 @@ class SparkAdapter(SQLAdapter):
 
         schema_map = self._get_catalog_schemas(manifest)
         if len(schema_map) > 1:
-            dbt.exceptions.raise_compiler_error(
+            raise_compiler_error(
                 f'Expected only one database in get_catalog, found '
                 f'{list(schema_map)}'
             )
@@ -223,7 +225,7 @@ class SparkAdapter(SQLAdapter):
         logger.warning("_get_one_catalog1 {}", information_schema.__dict__)
         logger.warning("_get_one_catalog2 {}", schemas)
         if len(schemas) != 1:
-            dbt.exceptions.raise_compiler_error(
+            raise_compiler_error(
                 f'Expected only one schema in spark _get_one_catalog, found '
                 f'{schemas}'
             )
