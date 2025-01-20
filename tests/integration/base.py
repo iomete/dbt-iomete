@@ -28,7 +28,7 @@ from dbt.contracts.graph.manifest import Manifest
 
 logger = AdapterLogger("iomete")
 
-INITIAL_ROOT = '/Users/alokhp/PycharmProjects/dbt-iomete/'
+INITIAL_ROOT = os.getcwd()
 
 
 def normalize(path):

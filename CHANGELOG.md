@@ -1,3 +1,9 @@
+## dbt-iomete 1.7.4 (Jan 20, 2025)
+- Added Domain and multi catalog support
+- Fixed Incremental table creation flow
+- Fixed test cases
+- Added Python support till v3.11
+
 ## dbt-iomete 1.7.3 (Oct 10, 2024)
 - Added Data Plane parameter for profile
 
