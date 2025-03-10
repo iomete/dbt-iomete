@@ -1,3 +1,7 @@
+## dbt-iomete 1.7.5 (Mar 10, 2025)
+- Fixed type not getting marked as `view` for relations that are views
+- Fixed model execution marked as OK even if the model fails
+
 ## dbt-iomete 1.7.4 (Jan 20, 2025)
 - Added Domain and multi catalog support
 - Fixed Incremental table creation flow

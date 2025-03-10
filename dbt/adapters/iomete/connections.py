@@ -162,14 +162,14 @@ class PyhiveConnectionWrapper(object):
         if poll_state.errorMessage:
             logger.debug("Poll response: {}".format(poll_state))
             logger.debug("Poll status: {}".format(state))
-            dbt.exceptions.DbtDatabaseError(poll_state.errorMessage)
+            raise dbt.exceptions.DbtDatabaseError(poll_state.errorMessage)
 
         elif state not in STATE_SUCCESS:
             status_type = ThriftState._VALUES_TO_NAMES.get(
                 state,
                 'Unknown<{!r}>'.format(state))
 
-            dbt.exceptions.DbtDatabaseError(
+            raise dbt.exceptions.DbtDatabaseError(
                 "Query failed with status: {}".format(status_type))
 
         logger.debug("Poll status: {}, query complete".format(state))
