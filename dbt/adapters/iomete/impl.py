@@ -101,7 +101,7 @@ class SparkAdapter(SQLAdapter):
         relations = []
         for table in tables:
             rel_type = RelationType.Table
-            if table['provider'] and table['provider'].lower() == 'view':
+            if table['type'] and table['type'].lower() == 'view':
                 rel_type = RelationType.View
 
             provider = table['provider'].lower() if table['provider'] else None
