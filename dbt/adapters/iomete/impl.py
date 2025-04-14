@@ -69,6 +69,11 @@ class SparkAdapter(SQLAdapter):
     def date_function(cls) -> str:
         return 'current_timestamp()'
 
+    def list_schemas(self, database: str) -> List[str]:
+        results = self.execute_macro(LIST_SCHEMAS_MACRO_NAME, kwargs={"database": database})
+
+        return [row[0] for row in results]
+
     @classmethod
     def convert_text_type(cls, agate_table, col_idx):
         return "string"
@@ -96,7 +101,9 @@ class SparkAdapter(SQLAdapter):
     def list_relations_without_caching(
             self, schema_relation: SparkRelation
     ) -> List[SparkRelation]:
-        tables = self.schema_service.get_tables_by_namespace(str(schema_relation))
+        tables = self.schema_service.get_tables_by_namespace(
+            schema_relation.database, schema_relation.schema
+        )
 
         relations = []
         for table in tables:
@@ -105,10 +112,10 @@ class SparkAdapter(SQLAdapter):
                 rel_type = RelationType.View
 
             provider = table['provider'].lower() if table['provider'] else None
-            schema = table['namespace'] if table['catalog'] == IOMETE_DEFAULT_CATALOG_NAME else f"{table['catalog']}.{table['namespace']}"
 
             relation = self.Relation.create(
-                schema=schema,
+                database=table['catalog'],
+                schema=table['namespace'],
                 identifier=table['name'],
                 type=rel_type,
                 provider=provider,
@@ -118,14 +125,6 @@ class SparkAdapter(SQLAdapter):
             relations.append(relation)
 
         return relations
-
-    def get_relation(
-            self, database: str, schema: str, identifier: str
-    ) -> Optional[BaseRelation]:
-        if not self.Relation.get_default_include_policy().database:
-            database = None  # type: ignore
-
-        return super().get_relation(database, schema, identifier)
 
     def get_columns_in_relation(self, relation: Relation) -> List[SparkColumn]:
         is_temp_table = relation.schema is None and relation.identifier.endswith("tmp")
@@ -140,11 +139,11 @@ class SparkAdapter(SQLAdapter):
 
         table_fields = cached_relation.table_fields if cached_relation else None
         if table_fields is None:
-            table = self.schema_service.get_table(relation.schema, relation.identifier)
+            table = self.schema_service.get_table(relation.database, relation.schema, relation.identifier)
             table_fields = table["columns"] if table else None
 
         return [SparkColumn(
-            table_database=None,
+            table_database=relation.database,
             table_schema=relation.schema,
             table_name=relation.name,
             table_type=relation.type,
@@ -163,7 +162,7 @@ class SparkAdapter(SQLAdapter):
             )
 
             return [SparkColumn(
-                table_database=None,
+                table_database=relation.database,
                 table_schema=relation.schema,
                 table_name=relation.name,
                 table_type=relation.type,
@@ -185,7 +184,7 @@ class SparkAdapter(SQLAdapter):
     def _get_columns_for_catalog(
             self, relation: SparkRelation
     ) -> Iterable[Dict[str, Any]]:
-        logger.warning("_get_columns_for_catalog {}", relation.__dict__)
+        # logger.warning("_get_columns_for_catalog {}", relation.__dict__)
         columns = self.get_columns_in_relation(relation)
 
         for column in columns:
@@ -199,14 +198,14 @@ class SparkAdapter(SQLAdapter):
     def get_catalog(self, manifest):
 
         schema_map = self._get_catalog_schemas(manifest)
-        if len(schema_map) > 1:
-            raise_compiler_error(
-                f'Expected only one database in get_catalog, found '
-                f'{list(schema_map)}'
-            )
+        # if len(schema_map) > 1:
+        #     raise_compiler_error(
+        #         f'Expected only one database in get_catalog, found '
+        #         f'{list(schema_map)}'
+        #     )
 
-        logger.warning("get_catalog1 {}", schema_map)
-        logger.warning("get_catalog2 {}", self.config)
+        # logger.warning("get_catalog1 {}", schema_map)
+        # logger.warning("get_catalog2 {}", self.config)
 
         with executor(self.config) as tpe:
             futures: List[Future[agate.Table]] = []
@@ -222,8 +221,8 @@ class SparkAdapter(SQLAdapter):
     def _get_one_catalog(
             self, information_schema, schemas, manifest,
     ) -> agate.Table:
-        logger.warning("_get_one_catalog1 {}", information_schema.__dict__)
-        logger.warning("_get_one_catalog2 {}", schemas)
+        # logger.warning("_get_one_catalog1 {}", information_schema.__dict__)
+        # logger.warning("_get_one_catalog2 {}", schemas)
         if len(schemas) != 1:
             raise_compiler_error(
                 f'Expected only one schema in spark _get_one_catalog, found '
@@ -235,7 +234,7 @@ class SparkAdapter(SQLAdapter):
 
         columns: List[Dict[str, Any]] = []
         for relation in self.list_relations(database, schema):
-            logger.debug("Getting table schema for relation {}", relation)
+            # logger.debug("Getting table schema for relation {}", relation)
             columns.extend(self._get_columns_for_catalog(relation))
         return agate.Table.from_object(
             columns, column_types=DEFAULT_TYPE_TESTER

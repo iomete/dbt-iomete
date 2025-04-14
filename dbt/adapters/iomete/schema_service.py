@@ -16,23 +16,22 @@ class SchemaService:
         self.session = requests.Session()
         self.session.mount(credentials.scheme, adapter)
 
-    def get_tables_by_namespace(self, namespace: str) -> list:
-        final_namespace = namespace.split(".").pop()
+    def get_tables_by_namespace(self, catalog: str, schema: str) -> list:
 
         return self._get_namespaces(
-            path=f"{final_namespace}/tables?includeMetadata=true",
-            error_message=f"Could not get tables for schema {final_namespace}") or []
+            catalog=catalog,
+            path=f"{schema}/tables?includeMetadata=true",
+            error_message=f"Could not get tables for schema {catalog}.{schema}") or []
 
-    def get_table(self, namespace: str, table_name: str) -> Optional[dict]:
-        final_namespace = namespace.split(".").pop()
-
+    def get_table(self, catalog: str, schema: str, table_name: str) -> Optional[dict]:
         return self._get_namespaces(
-            path=f"{final_namespace}/tables/{table_name}",
-            error_message=f"Could not get table metadata for {final_namespace}.{table_name}")
+            catalog=catalog,
+            path=f"{schema}/tables/{table_name}",
+            error_message=f"Could not get table metadata for {catalog}.{schema}.{table_name}"
+        )
 
-    def _get_namespaces(self, path: str, error_message: str):
+    def _get_namespaces(self, catalog: str, path: str, error_message: str):
         try:
-            catalog = self.credentials.schema.split(".")[0] if "." in self.credentials.schema else IOMETE_DEFAULT_CATALOG_NAME
             namespaces = f"{self.credentials.scheme}://{self.credentials.host}:{self.credentials.port}/api/v1/domains/{self.credentials.domain}/schema/catalogs/{catalog}/namespaces"
 
             response = self.session.get(f"{namespaces}/{path}", timeout=10,

@@ -152,7 +152,7 @@
 
 {% macro iomete__list_schemas(database) -%}
   {% call statement('list_schemas', fetch_result=True, auto_begin=False) %}
-    show databases
+    show schemas in {{ database }}
   {% endcall %}
   {{ return(load_result('list_schemas').table) }}
 {% endmacro %}

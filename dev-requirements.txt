@@ -1,6 +1,5 @@
 markupsafe==2.0.1
-protobuf==4.25.5
-dbt-core==1.7.0
+dbt-core==1.7.19
 
 
 freezegun==0.3.9
@@ -13,6 +12,7 @@ ipdb
 pytest-xdist>=2.1.0,<3
 flaky>=3.5.3,<4
 pytest-csv
+snowplow-tracker==0.11.0
 
 # Test requirements
-dbt-tests-adapter==1.7.0
+dbt-tests-adapter==1.7.19

@@ -35,7 +35,7 @@
                                 
     {%- set tmp_relation = api.Relation.create(identifier=tmp_identifier,
                                                   schema=target_relation.schema,
-                                                  database=none,
+                                                  database=target_relation.database,
                                                   type='view') -%}
 
     {% set select = snapshot_staging_table(strategy, sql, target_relation) %}

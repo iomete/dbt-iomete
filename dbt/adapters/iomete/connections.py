@@ -39,26 +39,26 @@ class SparkCredentials(Credentials):
     server_side_parameters: Dict[str, Any] = field(default_factory=dict)
     retry_all: bool = False
 
-    @classmethod
-    def __pre_deserialize__(cls, data):
-        data = super().__pre_deserialize__(data)
-        if 'database' not in data:
-            data['database'] = None
-        return data
+    # @classmethod
+    # def __pre_deserialize__(cls, data):
+    #     data = super().__pre_deserialize__(data)
+    #     if 'database' not in data:
+    #         data['database'] = None
+    #     return data
 
-    def __post_init__(self):
-        # spark classifies database and schema as the same thing
-        if (
-                self.database is not None and
-                self.database != self.schema
-        ):
-            raise dbt.exceptions.DbtRuntimeError(
-                f'    schema: {self.schema} \n'
-                f'    database: {self.database} \n'
-                f'On iomete, database must be omitted or have the same value as'
-                f' schema.'
-            )
-        self.database = None
+    # def __post_init__(self):
+    #     # spark classifies database and schema as the same thing
+    #     if (
+    #             self.database is not None and
+    #             self.database != self.schema
+    #     ):
+    #         raise dbt.exceptions.DbtRuntimeError(
+    #             f'    schema: {self.schema} \n'
+    #             f'    database: {self.database} \n'
+    #             f'On iomete, database must be omitted or have the same value as'
+    #             f' schema.'
+    #         )
+    #     self.database = None
 
     @property
     def type(self):
@@ -256,7 +256,7 @@ class SparkConnectionManager(SQLConnectionManager):
 
         for i in range(1 + creds.connect_retries):
             try:
-                cls.validate_creds(creds, ['host', 'port', 'user', 'token', 'lakehouse', 'dataplane'])
+                cls.validate_creds(creds, ['host', 'port', 'user', 'token', 'lakehouse', 'domain'])
                 conn = hive.connect(
                     scheme=creds.scheme,
                     host=creds.host,
