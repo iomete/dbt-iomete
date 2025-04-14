@@ -2,7 +2,7 @@ name: PR Check - Run Tests
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [ main, ab/pr-check]
 
 jobs:
   test:
