@@ -66,9 +66,9 @@ class TestIncrementalOnSchemaChange(DBTIntegrationTest):
 
     def run_incremental_sync_all_columns_remove_only(self):
         # this doesn't work on Delta today
-        select = 'model_a incremental_sync_all_columns_remove_only incremental_sync_all_columns_target'
+        select = 'model_a incremental_sync_all_columns_remove_only incremental_sync_all_columns_target_remove_only'
         compare_source = 'incremental_sync_all_columns_remove_only'
-        compare_target = 'incremental_sync_all_columns_target'
+        compare_target = 'incremental_sync_all_columns_target_remove_only'
         self.run_twice_and_assert(select, compare_source, compare_target)
 
 

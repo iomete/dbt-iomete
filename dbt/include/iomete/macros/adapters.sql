@@ -245,18 +245,20 @@
   {% if add_columns is none %}
     {% set add_columns = [] %}
   {% endif %}
-  
-  {% set sql -%}
-     
-     alter {{ relation.type }} {{ relation }}
-       
-       {% if add_columns %} add columns {% endif %}
-            {% for column in add_columns %}
-               {{ column.name }} {{ column.data_type }}{{ ',' if not loop.last }}
-            {% endfor %}
-  
-  {%- endset -%}
 
-  {% do run_query(sql) %}
+  {% if add_columns %}
+      {% set sql -%}
+
+         alter {{ relation.type }} {{ relation }}
+
+           {% if add_columns %} add columns {% endif %}
+                {% for column in add_columns %}
+                   {{ column.name }} {{ column.data_type }}{{ ',' if not loop.last }}
+                {% endfor %}
+
+      {%- endset -%}
+
+      {% do run_query(sql) %}
+  {% endif %}
 
 {% endmacro %}
