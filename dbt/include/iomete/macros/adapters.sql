@@ -262,3 +262,14 @@
   {% endif %}
 
 {% endmacro %}
+
+{% macro get_columns_in_relation_raw(relation) -%}
+  {{ return(adapter.dispatch('get_columns_in_relation_raw', 'dbt')(relation)) }}
+{%- endmacro -%}
+
+{% macro iomete__get_columns_in_relation_raw(relation) -%}
+  {% call statement('get_columns_in_relation_raw', fetch_result=True) %}
+      describe extended {{ relation }}
+  {% endcall %}
+  {% do return(load_result('get_columns_in_relation_raw').table) %}
+{% endmacro %}
