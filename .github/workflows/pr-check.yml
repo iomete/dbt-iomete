@@ -23,7 +23,7 @@ jobs:
           pip install -r requirements.txt
           pip install -r dev-requirements.txt
 
-      - name: Run Unit tests
+      - name: Run Unit tests.
         run: |
           tox -e unit
 
