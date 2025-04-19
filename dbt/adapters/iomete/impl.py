@@ -18,6 +18,7 @@ from dbt.adapters.iomete import SparkRelation
 from dbt.adapters.iomete import SparkColumn
 from dbt.adapters.base import BaseRelation
 from dbt.clients.agate_helper import DEFAULT_TYPE_TESTER
+from dbt_common.utils import AttrDict
 from dbt.events import AdapterLogger
 from dbt.utils import executor
 import sentry_sdk
@@ -29,6 +30,7 @@ logger = AdapterLogger("iomete")
 
 LIST_SCHEMAS_MACRO_NAME = 'list_schemas'
 FETCH_TBL_PROPERTIES_MACRO_NAME = 'fetch_tbl_properties'
+GET_COLUMNS_IN_RELATION_RAW_MACRO_NAME = "get_columns_in_relation_raw"
 
 KEY_TABLE_OWNER = 'Owner'
 KEY_TABLE_STATISTICS = 'Statistics'
@@ -132,28 +134,11 @@ class SparkAdapter(SQLAdapter):
         if is_temp_table:
             return self._get_columns_of_temp_table(relation)
 
-        cached_relations = self.cache.get_relations(relation.database, relation.schema)
-        cached_relation = next(
-            (cached_relation for cached_relation in cached_relations if str(cached_relation) == str(relation)),
-            None,
+        rows: AttrDict = self.execute_macro(
+            GET_COLUMNS_IN_RELATION_RAW_MACRO_NAME, kwargs={"relation": relation}
         )
-
-        table_fields = cached_relation.table_fields if cached_relation else None
-        if table_fields is None:
-            table = self.schema_service.get_table(relation.schema, relation.identifier)
-            table_fields = table["columns"] if table else None
-
-        return [SparkColumn(
-            table_database=None,
-            table_schema=relation.schema,
-            table_name=relation.name,
-            table_type=relation.type,
-            table_owner=None,
-            table_stats=None,
-            column=column["name"],
-            column_index=idx,
-            dtype=column["dataType"],
-        ) for idx, column in enumerate(table_fields or [])]
+        columns = self.parse_describe_extended(relation, rows)
+        return columns
 
     def _get_columns_of_temp_table(self, relation: Relation) -> List[SparkColumn]:
         try:
@@ -278,6 +263,32 @@ class SparkAdapter(SQLAdapter):
 
         return sql
 
+    def parse_describe_extended(
+        self, relation: BaseRelation, raw_rows: AttrDict
+    ) -> List[SparkColumn]:
+        # Convert the Row to a dict
+        dict_rows = [dict(zip(row._keys, row._values)) for row in raw_rows]
+        # Find the separator between the rows and the metadata provided
+        # by the DESCRIBE TABLE EXTENDED statement
+        pos = self.find_table_information_separator(dict_rows)
+
+        # Remove rows that start with a hash, they are comments
+        rows = [row for row in raw_rows[0:pos] if not row["col_name"].startswith("#")]
+        return [
+            SparkColumn(
+                table_database=None,
+                table_schema=relation.schema,
+                table_name=relation.name,
+                table_type=relation.type,
+                table_owner=None,
+                table_stats=None,
+                column=column["col_name"],
+                column_index=idx,
+                dtype=column["data_type"],
+            )
+            for idx, column in enumerate(rows)
+        ]
+
     @property
     def python_submission_helpers(self) -> Dict[str, Type[PythonJobHelper]]:
         return {
@@ -313,6 +324,15 @@ class SparkAdapter(SQLAdapter):
             raise
         finally:
             conn.transaction_open = False
+
+    @staticmethod
+    def find_table_information_separator(rows: List[dict]) -> int:
+        pos = 0
+        for row in rows:
+            if not row["col_name"] or row["col_name"].startswith("#"):
+                break
+            pos += 1
+        return pos
 
 
 # spark does something interesting with joins when both tables have the same

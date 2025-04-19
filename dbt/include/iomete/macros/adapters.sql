@@ -245,18 +245,31 @@
   {% if add_columns is none %}
     {% set add_columns = [] %}
   {% endif %}
-  
-  {% set sql -%}
-     
-     alter {{ relation.type }} {{ relation }}
-       
-       {% if add_columns %} add columns {% endif %}
-            {% for column in add_columns %}
-               {{ column.name }} {{ column.data_type }}{{ ',' if not loop.last }}
-            {% endfor %}
-  
-  {%- endset -%}
 
-  {% do run_query(sql) %}
+  {% if add_columns %}
+      {% set sql -%}
 
+         alter {{ relation.type }} {{ relation }}
+
+           {% if add_columns %} add columns {% endif %}
+                {% for column in add_columns %}
+                   {{ column.name }} {{ column.data_type }}{{ ',' if not loop.last }}
+                {% endfor %}
+
+      {%- endset -%}
+
+      {% do run_query(sql) %}
+  {% endif %}
+
+{% endmacro %}
+
+{% macro get_columns_in_relation_raw(relation) -%}
+  {{ return(adapter.dispatch('get_columns_in_relation_raw', 'dbt')(relation)) }}
+{%- endmacro -%}
+
+{% macro iomete__get_columns_in_relation_raw(relation) -%}
+  {% call statement('get_columns_in_relation_raw', fetch_result=True) %}
+      describe extended {{ relation }}
+  {% endcall %}
+  {% do return(load_result('get_columns_in_relation_raw').table) %}
 {% endmacro %}

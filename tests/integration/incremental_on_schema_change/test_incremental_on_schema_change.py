@@ -57,6 +57,20 @@ class TestIncrementalOnSchemaChange(DBTIntegrationTest):
         compare_target = 'incremental_sync_all_columns_target'
         self.run_twice_and_assert(select, compare_source, compare_target)
 
+    def run_incremental_sync_all_columns_add_only(self):
+        # this doesn't work on Delta today
+        select = 'model_a incremental_sync_all_columns_add_only incremental_sync_all_columns_target'
+        compare_source = 'incremental_sync_all_columns_add_only'
+        compare_target = 'incremental_sync_all_columns_target'
+        self.run_twice_and_assert(select, compare_source, compare_target)
+
+    def run_incremental_sync_all_columns_remove_only(self):
+        # this doesn't work on Delta today
+        select = 'model_a incremental_sync_all_columns_remove_only incremental_sync_all_columns_target_remove_only'
+        compare_source = 'incremental_sync_all_columns_remove_only'
+        compare_target = 'incremental_sync_all_columns_target_remove_only'
+        self.run_twice_and_assert(select, compare_source, compare_target)
+
 
 class TestInsertOverwrite(TestIncrementalOnSchemaChange):
 
@@ -104,3 +118,9 @@ class TestIcebergOnSchemaChange(TestIncrementalOnSchemaChange):
 
     def test__run_incremental_sync_all_columns(self):
         self.run_incremental_sync_all_columns()
+
+    def test__run_incremental_sync_all_columns_add_only(self):
+        self.run_incremental_sync_all_columns_add_only()
+
+    def test__run_incremental_sync_all_columns_remove_only(self):
+        self.run_incremental_sync_all_columns_remove_only()
