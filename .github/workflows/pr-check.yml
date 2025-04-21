@@ -1,0 +1,50 @@
+name: PR Check - Run Tests
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt', '**/dev-requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r dev-requirements.txt
+          pip install -r requirements.txt
+
+      - name: Run Unit tests
+        env:
+          DBT_IOMETE_HOST: dev.iomete.cloud
+          DBT_IOMETE_PORT: 443
+          DBT_IOMETE_HTTPS: true
+          DBT_IOMETE_LAKEHOUSE: dbt
+          DBT_IOMETE_USER_NAME: admin
+          DBT_IOMETE_DOMAIN: default
+          DBT_IOMETE_TOKEN: ${{ secrets.DBT_IOMETE_TOKEN }}
+          DBT_IOMETE_DATAPLANE: spark-resources
+        run: |
+          tox -e unit
+
+
+#      - name: Run Integration tests
+#        run: |
+#          tox -e integration-iomete
