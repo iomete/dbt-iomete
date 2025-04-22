@@ -53,7 +53,9 @@ jobs:
       - name: Run Unit tests
         run: |
           tox -e unit
-
+      - name: Run integration tests
+        run: |
+          tox -e integration-iomete
       - name: Clean up dist
         run: |
           rm -rf dist/
