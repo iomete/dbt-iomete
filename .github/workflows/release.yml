@@ -53,6 +53,11 @@ jobs:
       - name: Run Unit tests
         run: |
           tox -e unit
+
+      - name: Clean up dist
+        run: |
+          rm -rf dist/
+
       - name: Create distribution
         run: |
           python setup.py sdist
