@@ -9,7 +9,7 @@ jobs:
   package-and-publish:
     env:
       # These env variables are needed to publish code to PyPI
-      PYPI_TOKEN: '${{ secrets.PYPI_TOKEN }}'
+      PYPI_TOKEN: '${{ secrets.API_PYPI_TEST }}'
       REF: '${{ github.ref }}'
     runs-on: ${{ matrix.os }}  # This is defined by the strategy below
     strategy:
