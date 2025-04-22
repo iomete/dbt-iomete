@@ -9,7 +9,7 @@ jobs:
   package-and-publish:
     env:
       # These env variables are needed to publish code to PyPI
-      PYPI_TOKEN: '${{ secrets.API_PYPI_TEST }}'
+      PYPI_TOKEN: '${{ secrets.PYPI_TOKEN }}'
       REF: '${{ github.ref }}'
     runs-on: ${{ matrix.os }}  # This is defined by the strategy below
     strategy:
@@ -76,7 +76,7 @@ jobs:
       - name: Publish packages
         if: ( success() && contains(steps.check_dist.outputs.not_empty, 'true') )
         run: |
-          export PYPI_TOKEN=${{ secrets.API_PYPI_TEST }} && echo $PYPI_TOKEN  && twine upload -u __token__ -p "$PYPI_TOKEN" dist/*
+          twine upload -u __token__ -p "$PYPI_TOKEN" dist/*
 
       - name: Trigger post-release workflow
         # This will check if newly published packages can be pip installed in clean environments

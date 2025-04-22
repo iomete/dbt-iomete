@@ -9,8 +9,8 @@ jobs:
   test-pip-install:
     env:
       # Need to provide package and module name as we are not relaying on the repository here at all
-      PACKAGE: 'iomete-dbt-test'
-      MODULE: 'iomete-dbt-test'
+      PACKAGE: 'dbt-iomete'
+      MODULE: 'dbt-iomete'
     runs-on: ${{ matrix.os }}  # This is defined by the strategy below
     strategy:
       fail-fast: false  # Should not fail fast as we want to have a full picture which distributions are affected
