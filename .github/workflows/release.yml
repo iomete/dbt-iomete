@@ -71,7 +71,7 @@ jobs:
       - name: Publish packages
         if: ( success() && contains(steps.check_dist.outputs.not_empty, 'true') )
         run: |
-          twine upload dist/*
+          twine upload -u __token__ -p "$PYPI_TOKEN" dist/*
 
       - name: Trigger post-release workflow
         # This will check if newly published packages can be pip installed in clean environments
