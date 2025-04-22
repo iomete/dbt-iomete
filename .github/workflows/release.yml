@@ -1,0 +1,92 @@
+name: RELEASE
+
+on:
+  push:
+    tags:
+      - v*  # Will only run this workflow for tags starting with v, e.g. v2.0.0...
+
+jobs:
+  package-and-publish:
+    env:
+      # These env variables are needed to publish code to PyPI
+      PYPI_TOKEN: '${{ secrets.PYPI_TOKEN }}'
+      REF: '${{ github.ref }}'
+    runs-on: ${{ matrix.os }}  # This is defined by the strategy below
+    strategy:
+      matrix:
+        # It is again enough to only test on linux, as mac osx is only used by developers, and they can build from sdist.
+        os: [ ubuntu-24.04 ]  # Best to use reversed order (the most risky first)
+        # Should only build wheels for default python distribution at the moment.
+        python-version: [ '3.11' ]
+        architecture: ['x64', 'arm64']
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v4
+
+      - name: Extract tags (versions)
+        id: extract_tag
+        shell: bash
+        run: |
+          NEW_TAG=${REF##*/}
+          echo "new_version=${NEW_TAG:1}" >> $GITHUB_OUTPUT
+        env:
+          VERSION: ${{ steps.extract_tag.outputs.new_version }}
+      - name: Set up python
+        uses: actions/setup-python@v5
+        with:
+          architecture: x64  # Default architecture most systems operate on
+          python-version: ${{ matrix.python-version }}  # This is defined by the strategy above
+      - name: Set up Python
+        uses: actions/setup-python@v4
+
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt', '**/dev-requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r dev-requirements.txt
+          pip install -r requirements.txt
+      - name: Run Unit tests
+        run: |
+          tox -e unit
+      - name: Run integration tests
+        run: |
+          tox -e integration-iomete
+      - name: Clean up dist
+        run: |
+          rm -rf dist/
+
+      - name: Create distribution
+        run: |
+          python setup.py sdist
+
+      - name: Detect if dist/ is empty
+        # Pushing packages from empty directory raises an error in actions, detect if empty first
+        id: check_dist
+        shell: bash
+        run: |
+          if [[ $(ls -A "dist/" | wc -l) -ne 0 ]]
+            then
+              echo 'not empty' && echo "not_empty='true'" >> $GITHUB_OUTPUT
+            else
+              echo 'empty' && echo "not_empty='false'" >> $GITHUB_OUTPUT
+          fi
+      - name: Publish packages
+        if: ( success() && contains(steps.check_dist.outputs.not_empty, 'true') )
+        run: |
+          twine upload -u __token__ -p "$PYPI_TOKEN" dist/*
+
+      - name: Trigger post-release workflow
+        # This will check if newly published packages can be pip installed in clean environments
+        if: success()
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.API_TOKEN }}
+          repository: ${{ github.repository }}
+          event-type: post-release
+          client-payload: '{"version": "${{ steps.extract_tag.outputs.new_version }}"}'
