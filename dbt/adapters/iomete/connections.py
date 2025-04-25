@@ -48,17 +48,20 @@ class SparkCredentials(Credentials):
 
     def __post_init__(self):
         # spark classifies database and schema as the same thing
-        if (
-                self.database is not None and
-                self.database != self.schema
-        ):
-            raise dbt.exceptions.DbtRuntimeError(
-                f'    schema: {self.schema} \n'
-                f'    database: {self.database} \n'
-                f'On iomete, database must be omitted or have the same value as'
-                f' schema.'
-            )
-        self.database = None
+        # if (
+        #         self.database is not None and
+        #         self.database != self.schema
+        # ):
+        #     raise dbt.exceptions.DbtRuntimeError(
+        #         f'    schema: {self.schema} \n'
+        #         f'    database: {self.database} \n'
+        #         f'On iomete, database must be omitted or have the same value as'
+        #         f' schema.'
+        #     )
+        # self.database = None
+        if self.database is not None and not self.database.strip():
+            raise dbt.exceptions.ValidationException(f"Invalid catalog name : {self.database}.")
+        return
 
     @property
     def type(self):
@@ -73,7 +76,7 @@ class SparkCredentials(Credentials):
         return f"{self.scheme}://{self.host}:{self.port}/dataplane/{self.dataplane}/lakehouse/{self.lakehouse}"
 
     def _connection_keys(self):
-        return 'host', 'port','dataplane', 'lakehouse', 'schema'
+        return 'host', 'port','dataplane', 'lakehouse', 'schema'    # TODO: Check if need to add database
 
 
 class PyhiveConnectionWrapper(object):
@@ -262,7 +265,7 @@ class SparkConnectionManager(SQLConnectionManager):
                     host=creds.host,
                     port=creds.port,
                     lakehouse=creds.lakehouse,
-                    database="default",
+                    database=creds.database,
                     username=creds.user,
                     password=creds.token,
                     data_plane=creds.dataplane
