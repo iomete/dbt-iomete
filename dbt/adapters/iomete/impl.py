@@ -1,4 +1,3 @@
-import json
 from concurrent.futures import Future
 from dataclasses import dataclass
 from typing import Optional, List, Dict, Any, Union, Iterable, Type
@@ -109,8 +108,8 @@ class SparkAdapter(SQLAdapter):
             provider = table['provider'].lower() if table['provider'] else None
 
             relation = self.Relation.create(
-                database=table.database,
-                schema=table.schema,
+                database=table['catalog'],
+                schema=table['namespace'],
                 identifier=table['name'],
                 type=rel_type,
                 provider=provider,
@@ -120,6 +119,14 @@ class SparkAdapter(SQLAdapter):
             relations.append(relation)
 
         return relations
+
+    def get_relation(
+            self, database: str, schema: str, identifier: str
+    ) -> Optional[BaseRelation]:
+        if not self.Relation.get_default_include_policy().database:
+            database = None  # type: ignore
+
+        return super().get_relation(database, schema, identifier)
 
     def get_columns_in_relation(self, relation: Relation) -> List[SparkColumn]:
         is_temp_table = relation.schema is None and relation.identifier.endswith("tmp")
