@@ -40,6 +40,10 @@ class SparkCredentials(Credentials):
     server_side_parameters: Dict[str, Any] = field(default_factory=dict)
     retry_all: bool = False
 
+    ALIASES = {
+        'catalog': 'database',
+    }
+
     @classmethod
     def __pre_deserialize__(cls, data):
         data = super().__pre_deserialize__(data)

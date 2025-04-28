@@ -15,8 +15,8 @@ prompts:
     hint: "domain name that dbt will connect"
   lakehouse:
     hint: "lakehouse name that dbt will connect"
-  database:
-    hint: "default database that dbt will build objects in"
+  catalog:
+    hint: "default catalog that dbt will build objects in"
   schema:
     hint: "default schema that dbt will build objects in"
   user:
