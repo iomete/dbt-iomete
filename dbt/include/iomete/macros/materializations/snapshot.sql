@@ -35,7 +35,7 @@
                                 
     {%- set tmp_relation = api.Relation.create(identifier=tmp_identifier,
                                                   schema=target_relation.schema,
-                                                  database=none,
+                                                  database=target_relation.database,
                                                   type='view') -%}
 
     {% set select = snapshot_staging_table(strategy, sql, target_relation) %}
@@ -77,7 +77,7 @@
   {%- set file_format = config.get('file_format', 'iceberg') -%}
 
   {% set target_relation_exists, target_relation = get_or_create_relation(
-          database=none,
+          database=model.database,
           schema=model.schema,
           identifier=target_table,
           type='table') -%}
@@ -93,7 +93,7 @@
   {%- if target_relation_exists -%}
     {%- if target_relation.provider not in ['iceberg'] -%}
       {% set invalid_format_msg -%}
-        The existing table {{ model.schema }}.{{ target_table }} is in another format than 'iceberg'
+        The existing table {{ model.database }}.{{ model.schema }}.{{ target_table }} is in another format than 'iceberg'
       {%- endset %}
       {% do exceptions.raise_compiler_error(invalid_format_msg) %}
     {% endif %}

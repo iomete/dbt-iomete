@@ -24,7 +24,7 @@ from dbt.utils import executor
 import sentry_sdk
 
 from dbt.adapters.iomete.python_job import IometeSparkJobHelper
-from dbt.adapters.iomete.schema_service import SchemaService, IOMETE_DEFAULT_CATALOG_NAME
+from dbt.adapters.iomete.schema_service import SchemaService
 
 logger = AdapterLogger("iomete")
 
@@ -107,11 +107,10 @@ class SparkAdapter(SQLAdapter):
                 rel_type = RelationType.View
 
             provider = table['provider'].lower() if table['provider'] else None
-            schema = table['namespace'] if table['catalog'] == IOMETE_DEFAULT_CATALOG_NAME else f"{table['catalog']}.{table['namespace']}"
 
             relation = self.Relation.create(
-                database=schema,
-                schema=schema,
+                database=table.database,
+                schema=table.schema,
                 identifier=table['name'],
                 type=rel_type,
                 provider=provider,

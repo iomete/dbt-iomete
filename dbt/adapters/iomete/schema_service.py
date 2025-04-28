@@ -5,8 +5,6 @@ from dbt.context.exceptions_jinja import raise_compiler_error
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 
-IOMETE_DEFAULT_CATALOG_NAME = "spark_catalog"
-
 
 class SchemaService:
     def __init__(self, credentials):

@@ -1,6 +1,8 @@
 {% materialization table, adapter = 'iomete', supported_languages=['sql', 'python'] %}
   {%- set language = model['language'] -%}
   {%- set identifier = model['alias'] -%}
+  {% set database = model.database %}
+  {% set schema = model.schema %}
 
   {%- set old_relation = adapter.get_relation(database=database, schema=schema, identifier=identifier) -%}
   {%- set target_relation = api.Relation.create(identifier=identifier,
