@@ -40,16 +40,13 @@ class SparkCredentials(Credentials):
     server_side_parameters: Dict[str, Any] = field(default_factory=dict)
     retry_all: bool = False
 
-    ALIASES = {
+    _ALIASES = {
         'catalog': 'database',
     }
 
-    @classmethod
-    def __pre_deserialize__(cls, data):
-        data = super().__pre_deserialize__(data)
-        if 'database' not in data:
-            data['database'] = None
-        return data
+    @property
+    def catalog(self):
+        return self.database
 
     def __post_init__(self):
         if self.database is not None and not self.database.strip():

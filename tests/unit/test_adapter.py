@@ -44,18 +44,23 @@ class TestSparkAdapter(unittest.TestCase):
     def test_relation_with_database(self):
         config = self._get_target_http(self.project_cfg)
         adapter = SparkAdapter(config)
-        # fine
+
         adapter.Relation.create(schema='different', identifier='table')
-        with self.assertRaises(DbtRuntimeError):
-            # not fine - database set
-            adapter.Relation.create(database='something', schema='different', identifier='table')
+        relation = adapter.Relation.create(database='something', schema='different', identifier='table')
+        self.assertIsNotNone(relation)
+
+    def test_relation_without_database(self):
+        config = self._get_target_http(self.project_cfg)
+        adapter = SparkAdapter(config)
+
+        relation = adapter.Relation.create(schema='different', identifier='table')
+        self.assertIsNotNone(relation)
 
     def test_profile_with_database(self):
         profile = {
             'outputs': {
                 'test': {
                     'type': 'iomete',
-                    # not allowed
                     'database': 'analytics2',
                     'schema': 'analytics',
                     'host': 'myorg.sparkhost.com',
@@ -66,5 +71,30 @@ class TestSparkAdapter(unittest.TestCase):
             },
             'target': 'test'
         }
-        with self.assertRaises(DbtRuntimeError):
-            config_from_parts_or_dicts(self.project_cfg, profile)
+        config = config_from_parts_or_dicts(self.project_cfg, profile)
+        adapter = SparkAdapter(config)
+
+        self.assertEqual(adapter.config.credentials.database, 'analytics2')
+        self.assertEqual(adapter.config.credentials.catalog, 'analytics2')
+
+    def test_profile_with_catalog_keyword(self):
+        profile = {
+            'outputs': {
+                'test': {
+                    'type': 'iomete',
+                    'catalog': 'analytics2',
+                    'schema': 'analytics',
+                    'host': 'myorg.sparkhost.com',
+                    'port': 443,
+                    'token': 'abc123',
+                    'cluster': '01234-23423-coffeetime',
+                }
+            },
+            'target': 'test'
+        }
+        config = config_from_parts_or_dicts(self.project_cfg, profile)
+        adapter = SparkAdapter(config)
+
+        self.assertEqual(adapter.config.credentials.database, 'analytics2')
+        self.assertEqual(adapter.config.credentials.catalog, 'analytics2')
+
