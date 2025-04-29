@@ -3,6 +3,7 @@
 *.egg-info
 .env/
 env/
+venv/
 *.pyc
 __pycache__
 .tox/
@@ -13,6 +14,7 @@ dbt-integration-tests
 test/integration/.user.yml
 .DS_Store
 .vscode
+.python-version
 *.log
 logs/
 /sample-test/
