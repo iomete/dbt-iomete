@@ -1,7 +1,7 @@
 import unittest
 
 import dbt.flags as flags
-from dbt.exceptions import DbtRuntimeError
+from dbt.exceptions import DbtProfileError
 from dbt.adapters.iomete import SparkAdapter
 from .utils import config_from_parts_or_dicts
 
@@ -56,7 +56,7 @@ class TestSparkAdapter(unittest.TestCase):
         relation = adapter.Relation.create(schema='different', identifier='table')
         self.assertIsNotNone(relation)
 
-    def test_profile_with_database(self):
+    def test_profile_with_database_keyword(self):
         profile = {
             'outputs': {
                 'test': {
@@ -98,3 +98,22 @@ class TestSparkAdapter(unittest.TestCase):
         self.assertEqual(adapter.config.credentials.database, 'analytics2')
         self.assertEqual(adapter.config.credentials.catalog, 'analytics2')
 
+    def test_profile_with_both_database_and_catalog(self):
+        profile = {
+            'outputs': {
+                'test': {
+                    'type': 'iomete',
+                    'database': 'analytics2',
+                    'catalog': 'analytics2',
+                    'schema': 'analytics',
+                    'host': 'myorg.sparkhost.com',
+                    'port': 443,
+                    'token': 'abc123',
+                    'cluster': '01234-23423-coffeetime',
+                }
+            },
+            'target': 'test'
+        }
+
+        with self.assertRaises(DbtProfileError):
+            config_from_parts_or_dicts(self.project_cfg, profile)
