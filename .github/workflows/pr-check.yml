@@ -15,8 +15,8 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
-          
+          python-version: '3.12'
+
       - name: Cache pip
         uses: actions/cache@v3
         with:
@@ -32,6 +32,10 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run Unit tests
+        run: |
+          tox -e unit
+
+      - name: Run Integration tests
         env:
           DBT_IOMETE_HOST: dev.iomete.cloud
           DBT_IOMETE_PORT: 443
@@ -42,9 +46,4 @@ jobs:
           DBT_IOMETE_TOKEN: ${{ secrets.DBT_IOMETE_TOKEN }}
           DBT_IOMETE_DATAPLANE: spark-resources
         run: |
-          tox -e unit
-
-
-#      - name: Run Integration tests
-#        run: |
-#          tox -e integration-iomete
+          tox -e integration-iomete

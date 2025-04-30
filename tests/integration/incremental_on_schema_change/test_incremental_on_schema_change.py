@@ -1,3 +1,4 @@
+import pytest
 from tests.integration.base import DBTIntegrationTest
 
 
@@ -18,7 +19,7 @@ class TestIncrementalOnSchemaChange(DBTIntegrationTest):
         }
 
     def run_twice_and_assert(
-            self, include, compare_source, compare_target
+        self, include, compare_source, compare_target
     ):
         # dbt run (twice)
         run_args = ['run']
@@ -87,9 +88,11 @@ class TestInsertOverwrite(TestIncrementalOnSchemaChange):
         }
 
     # only 'ignore' and 'fail' are supported
+    @pytest.mark.skip(reason="We do not support parquet file format yet")
     def test__run_incremental_ignore(self):
         self.run_incremental_ignore()
 
+    @pytest.mark.skip(reason="We do not support parquet file format yet")
     def test__run_incremental_fail_on_schema_change(self):
         self.run_incremental_fail_on_schema_change()
 

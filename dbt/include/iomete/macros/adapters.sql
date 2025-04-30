@@ -151,8 +151,6 @@
 {% endmacro %}
 
 {% macro iomete__list_schemas(database) -%}
-  {% do log("iomete__list_schemas ----->", info=True) %}
-  {% do log(database, info=True) %}
   {% call statement('list_schemas', fetch_result=True, auto_begin=False) %}
     {% if database is not none %}
       show namespaces in {{ database }}
