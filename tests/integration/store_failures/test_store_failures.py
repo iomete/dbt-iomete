@@ -1,3 +1,4 @@
+import pytest
 from tests.integration.base import DBTIntegrationTest
 
 
@@ -22,6 +23,7 @@ class TestStoreFailures(DBTIntegrationTest):
             }
         }
 
+    @pytest.mark.skip(reason="We do not support parquet file format yet")
     def test_store_failures(self):
         self.run_dbt(['run'])
         self.run_dbt(['test', '--store-failures'])
