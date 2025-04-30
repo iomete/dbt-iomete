@@ -51,4 +51,4 @@ jobs:
           pip install $PACKAGE==$VERSION
           # We test the installation is successful by importing the module, this will flag most, but not all, issues
           echo "Importing $MODULE..."
-          python -c "import $MODULE"
+          dbt --version
