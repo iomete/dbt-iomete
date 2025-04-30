@@ -46,4 +46,4 @@ jobs:
           DBT_IOMETE_TOKEN: ${{ secrets.DBT_IOMETE_TOKEN }}
           DBT_IOMETE_DATAPLANE: spark-resources
         run: |
-          tox -e integration-iomete
+          echo $DBT_IOMETE_TOKEN && tox -e integration-iomete
