@@ -6,6 +6,7 @@ import tempfile
 import traceback
 import unittest
 import time
+import uuid
 from contextlib import contextmanager
 from datetime import datetime
 from io import StringIO
@@ -114,14 +115,7 @@ class DBTIntegrationTest(unittest.TestCase):
     CREATE_SCHEMA_STATEMENT = 'CREATE SCHEMA {}'
     DROP_SCHEMA_STATEMENT = 'DROP SCHEMA IF EXISTS {} CASCADE'
 
-    _randint = random.randint(0, 9999)
-    _runtime_timedelta = (datetime.utcnow() - datetime(1970, 1, 1, 0, 0, 0))
-    _runtime = (
-            (int(_runtime_timedelta.total_seconds() * 1e6)) +
-            _runtime_timedelta.microseconds
-    )
-
-    prefix = f'test{_runtime}{_randint:04}'
+    prefix = uuid.uuid4().hex
     setup_alternate_db = False
 
     @property

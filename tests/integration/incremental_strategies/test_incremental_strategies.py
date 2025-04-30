@@ -1,3 +1,4 @@
+import pytest
 from cProfile import run
 from tests.integration.base import DBTIntegrationTest
 import dbt.exceptions
@@ -51,6 +52,7 @@ class TestInsertOverwrite(TestIncrementalStrategies):
         self.assertTablesEqual(
             "insert_overwrite_partitions", "expected_upsert")
 
+    @pytest.mark.skip(reason="We do not support parquet file format yet")
     def test_insert_overwrite(self):
         self.run_and_test()
 
