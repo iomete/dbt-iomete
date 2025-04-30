@@ -50,7 +50,7 @@ class SparkCredentials(Credentials):
 
     def __post_init__(self):
         if self.database is not None and not self.database.strip():
-            raise dbt.exceptions.ValidationException(f"Invalid catalog name : {self.database}.")
+            raise dbt.exceptions.ValidationError(f"Invalid catalog name : {self.database}.")
         if self.database is None:
             self.database = IOMETE_DEFAULT_CATALOG_NAME
         return

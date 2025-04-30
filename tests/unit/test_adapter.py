@@ -1,7 +1,7 @@
 import unittest
 
 import dbt.flags as flags
-from dbt.exceptions import DbtProfileError
+from dbt.exceptions import DbtProfileError, DbtRuntimeError
 from dbt.adapters.iomete import SparkAdapter
 from .utils import config_from_parts_or_dicts
 
@@ -116,4 +116,23 @@ class TestSparkAdapter(unittest.TestCase):
         }
 
         with self.assertRaises(DbtProfileError):
+            config_from_parts_or_dicts(self.project_cfg, profile)
+
+    def test_profile_with_empty_database(self):
+        profile = {
+            'outputs': {
+                'test': {
+                    'type': 'iomete',
+                    'database': '',
+                    'schema': 'analytics',
+                    'host': 'myorg.sparkhost.com',
+                    'port': 443,
+                    'token': 'abc123',
+                    'cluster': '01234-23423-coffeetime',
+                }
+            },
+            'target': 'test'
+        }
+
+        with self.assertRaises(DbtRuntimeError):
             config_from_parts_or_dicts(self.project_cfg, profile)

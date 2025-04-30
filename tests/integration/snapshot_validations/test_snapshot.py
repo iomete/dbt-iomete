@@ -70,14 +70,14 @@ class TestSnapshotStrategies(DBTIntegrationTest):
         snapshot_vars = f'{{"target_schema": "{ALT_SCHEMA}"}}'
         self.run_snapshot_versions_and_columns(snapshot_name, full_snapshot_path, snapshot_vars)
 
-    # def test_snapshot_diff_catalog_schema(self):
-    #     snapshot_name = 'snapshot_diff_catalog_schema'
-    #     full_snapshot_path = f"""{ALT_CATALOG}.{ALT_CATALOG_SCHEMA}.{snapshot_name}"""
-    #     snapshot_vars = f'{{"target_database": "{ALT_CATALOG}", "target_schema": "{ALT_CATALOG_SCHEMA}"}}'
-    #     self.run_snapshot_versions_and_columns(snapshot_name, full_snapshot_path, snapshot_vars)
-    #
-    # def test_snapshot_diff_catalog_schema_check(self):
-    #     snapshot_name = 'snapshot_diff_catalog_schema_check'
-    #     full_snapshot_path = f"""{ALT_CATALOG}.{ALT_CATALOG_SCHEMA}.{snapshot_name}"""
-    #     snapshot_vars = f'{{"target_database": "{ALT_CATALOG}", "target_schema": "{ALT_CATALOG_SCHEMA}"}}'
-    #     self.run_snapshot_versions_and_columns(snapshot_name, full_snapshot_path, snapshot_vars)
+    def test_snapshot_diff_catalog_schema(self):
+        snapshot_name = 'snapshot_diff_catalog_schema'
+        full_snapshot_path = f"""{ALT_CATALOG}.{ALT_CATALOG_SCHEMA}.{snapshot_name}"""
+        snapshot_vars = f'{{"target_database": "{ALT_CATALOG}", "target_schema": "{ALT_CATALOG_SCHEMA}"}}'
+        self.run_snapshot_versions_and_columns(snapshot_name, full_snapshot_path, snapshot_vars)
+
+    def test_snapshot_diff_catalog_schema_check(self):
+        snapshot_name = 'snapshot_diff_catalog_schema_check'
+        full_snapshot_path = f"""{ALT_CATALOG}.{ALT_CATALOG_SCHEMA}.{snapshot_name}"""
+        snapshot_vars = f'{{"target_database": "{ALT_CATALOG}", "target_schema": "{ALT_CATALOG_SCHEMA}"}}'
+        self.run_snapshot_versions_and_columns(snapshot_name, full_snapshot_path, snapshot_vars)

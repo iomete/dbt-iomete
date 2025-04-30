@@ -39,6 +39,8 @@ class SchemaService:
             response.raise_for_status()
             return json.loads(response.text)
         except requests.exceptions.HTTPError as err:
+            if err.response.text.__contains__("SCHEMA_NOT_FOUND"):      # TODO: fix the API response code
+                return None
             raise_compiler_error(
                 f"{error_message}. "
                 f"Request failed with status: {err.response.status_code} and error message is: {err.response.text}"
