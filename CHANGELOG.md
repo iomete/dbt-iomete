@@ -1,3 +1,6 @@
+## dbt-iomete 1.7.6 (May 1, 2025)
+- Fixed incremental models with on_schema_change set as sync_all_columns
+
 ## dbt-iomete 1.7.5 (Mar 10, 2025)
 - Fixed type not getting marked as `view` for relations that are views
 - Fixed model execution marked as OK even if the model fails
