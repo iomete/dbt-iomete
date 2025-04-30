@@ -23,6 +23,7 @@ class TestSnapshotStrategies(DBTIntegrationTest):
 
     def run_snapshot_versions_and_columns(self, snapshot_name, full_snapshot_path, snapshot_vars):
         print(f"Running snapshot test for: {snapshot_name}")
+        self.run_sql(f"DROP TABLE IF EXISTS {full_snapshot_path}")
         self.run_dbt(["seed"])
         self.run_dbt(["run", "-s", "base_table"])
         snapshot_cmd = ["snapshot", "-s", snapshot_name]
