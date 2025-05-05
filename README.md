@@ -48,6 +48,7 @@ iomete:
       dataplane: <iomete_dataplane>
       domain: <iomete_domain>
       lakehouse: <serverless_lakehouse_name>
+      catalog: <catalog_name>
       schema: <database_name>
       user: "{{ env_var('DBT_IOMETE_USER_NAME') }}"
       token: "{{ env_var('DBT_IOMETE_TOKEN') }}"

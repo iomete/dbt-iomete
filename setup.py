@@ -55,7 +55,7 @@ def _get_dbt_core_version():
 
 
 package_name = "dbt-iomete"
-package_version = "1.7.6"
+package_version = "1.7.7"
 dbt_core_version = _get_dbt_core_version()
 description = """The Apache Spark (IOMETE) adapter plugin for dbt"""
 

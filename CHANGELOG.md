@@ -1,3 +1,7 @@
+## dbt-iomete 1.7.7 (May 5, 2025)
+- Add explicit multi catalog support and fix snapshot apart from default catalog
+- Add multiple unique key support for incremental tables
+
 ## dbt-iomete 1.7.6 (May 1, 2025)
 - Fixed incremental models with on_schema_change set as sync_all_columns
 
