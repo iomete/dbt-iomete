@@ -19,6 +19,12 @@ export DBT_IOMETE_DATAPLANE=spark-resources
 tox -e integration-iomete
 ```
 
+## Run functional test (Using DBT Adaptor Tests)
+
+```shell
+tox -e functional
+```
+
 ## Run unit tests
 ```shell
 tox -e unit
