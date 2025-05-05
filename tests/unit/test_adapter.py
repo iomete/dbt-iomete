@@ -61,7 +61,7 @@ class TestSparkAdapter(unittest.TestCase):
             'outputs': {
                 'test': {
                     'type': 'iomete',
-                    'database': 'analytics2',
+                    'database': 'demo_catalog',
                     'schema': 'analytics',
                     'host': 'myorg.sparkhost.com',
                     'port': 443,
@@ -74,15 +74,14 @@ class TestSparkAdapter(unittest.TestCase):
         config = config_from_parts_or_dicts(self.project_cfg, profile)
         adapter = SparkAdapter(config)
 
-        self.assertEqual(adapter.config.credentials.database, 'analytics2')
-        self.assertEqual(adapter.config.credentials.catalog, 'analytics2')
+        self.assertEqual(adapter.config.credentials.database, 'demo_catalog')
 
     def test_profile_with_catalog_keyword(self):
         profile = {
             'outputs': {
                 'test': {
                     'type': 'iomete',
-                    'catalog': 'analytics2',
+                    'catalog': 'demo_catalog',
                     'schema': 'analytics',
                     'host': 'myorg.sparkhost.com',
                     'port': 443,
@@ -95,16 +94,15 @@ class TestSparkAdapter(unittest.TestCase):
         config = config_from_parts_or_dicts(self.project_cfg, profile)
         adapter = SparkAdapter(config)
 
-        self.assertEqual(adapter.config.credentials.database, 'analytics2')
-        self.assertEqual(adapter.config.credentials.catalog, 'analytics2')
+        self.assertEqual(adapter.config.credentials.database, 'demo_catalog')
 
     def test_profile_with_both_database_and_catalog(self):
         profile = {
             'outputs': {
                 'test': {
                     'type': 'iomete',
-                    'database': 'analytics2',
-                    'catalog': 'analytics2',
+                    'database': 'demo_catalog',
+                    'catalog': 'demo_catalog',
                     'schema': 'analytics',
                     'host': 'myorg.sparkhost.com',
                     'port': 443,
@@ -125,6 +123,25 @@ class TestSparkAdapter(unittest.TestCase):
                     'type': 'iomete',
                     'database': '',
                     'schema': 'analytics',
+                    'host': 'myorg.sparkhost.com',
+                    'port': 443,
+                    'token': 'abc123',
+                    'cluster': '01234-23423-coffeetime',
+                }
+            },
+            'target': 'test'
+        }
+
+        with self.assertRaises(DbtRuntimeError):
+            config_from_parts_or_dicts(self.project_cfg, profile)
+
+    def test_profile_with_incorrect_schema_containing_catalog_using_dot_notation(self):
+        profile = {
+            'outputs': {
+                'test': {
+                    'type': 'iomete',
+                    'database': 'demo_catalog',
+                    'schema': 'demo_catalog.analytics',
                     'host': 'myorg.sparkhost.com',
                     'port': 443,
                     'token': 'abc123',

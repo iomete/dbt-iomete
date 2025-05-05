@@ -18,7 +18,7 @@ prompts:
   catalog:
     hint: "default catalog that dbt will build objects in"
   schema:
-    hint: "default schema that dbt will build objects in"
+    hint: "default schema/database that dbt will build objects in"
   user:
     hint: "username"
   token:
