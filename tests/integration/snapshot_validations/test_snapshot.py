@@ -1,8 +1,8 @@
 from tests.integration.base import DBTIntegrationTest
 
 ALT_SCHEMA = 'dbt_experiment'
-ALT_CATALOG = 'release_test_catalog'
-ALT_CATALOG_SCHEMA = 'release_3_dot_something'
+ALT_CATALOG = 'test_dbt_multi_catalog'
+ALT_CATALOG_SCHEMA = 'test_schema'
 
 class TestSnapshotStrategies(DBTIntegrationTest):
     @property
