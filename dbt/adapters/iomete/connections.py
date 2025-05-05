@@ -20,6 +20,7 @@ import time
 logger = AdapterLogger("Spark")
 
 NUMBERS = DECIMALS + (int, float)
+IOMETE_DEFAULT_CATALOG_NAME = "spark_catalog"
 
 
 @dataclass
@@ -39,26 +40,22 @@ class SparkCredentials(Credentials):
     server_side_parameters: Dict[str, Any] = field(default_factory=dict)
     retry_all: bool = False
 
-    @classmethod
-    def __pre_deserialize__(cls, data):
-        data = super().__pre_deserialize__(data)
-        if 'database' not in data:
-            data['database'] = None
-        return data
+    _ALIASES = {
+        'catalog': 'database',
+    }
 
     def __post_init__(self):
-        # spark classifies database and schema as the same thing
-        if (
-                self.database is not None and
-                self.database != self.schema
-        ):
-            raise dbt.exceptions.DbtRuntimeError(
-                f'    schema: {self.schema} \n'
-                f'    database: {self.database} \n'
-                f'On iomete, database must be omitted or have the same value as'
-                f' schema.'
+        if self.database is not None and not self.database.strip():
+            raise dbt.exceptions.ValidationError(f"Invalid catalog name : {self.database}.")
+        if self.database is None:
+            self.database = IOMETE_DEFAULT_CATALOG_NAME
+
+        if "." in (self.schema or ""):
+            raise dbt.exceptions.ValidationError(
+                f"The schema should not contain '.': {self.schema}\n"
+                "If you are trying to set a catalog, please use `catalog` instead.\n"
             )
-        self.database = None
+        return
 
     @property
     def type(self):
@@ -73,7 +70,7 @@ class SparkCredentials(Credentials):
         return f"{self.scheme}://{self.host}:{self.port}/dataplane/{self.dataplane}/lakehouse/{self.lakehouse}"
 
     def _connection_keys(self):
-        return 'host', 'port','dataplane', 'lakehouse', 'schema'
+        return 'host', 'port','dataplane', 'lakehouse', 'database', 'schema'
 
 
 class PyhiveConnectionWrapper(object):
@@ -262,7 +259,7 @@ class SparkConnectionManager(SQLConnectionManager):
                     host=creds.host,
                     port=creds.port,
                     lakehouse=creds.lakehouse,
-                    database="default",
+                    database=creds.database,
                     username=creds.user,
                     password=creds.token,
                     data_plane=creds.dataplane

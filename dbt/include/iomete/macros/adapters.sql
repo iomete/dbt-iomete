@@ -152,7 +152,11 @@
 
 {% macro iomete__list_schemas(database) -%}
   {% call statement('list_schemas', fetch_result=True, auto_begin=False) %}
-    show databases
+    {% if database is not none %}
+      show namespaces in {{ database }}
+    {% else %}
+      show namespaces
+    {% endif %}
   {% endcall %}
   {{ return(load_result('list_schemas').table) }}
 {% endmacro %}
@@ -180,11 +184,6 @@
     drop {{ relation.type }} if exists {{ relation }}
   {%- endcall %}
 {% endmacro %}
-
-
-{% macro iomete__generate_database_name(custom_database_name=none, node=none) -%}
-  {% do return(None) %}
-{%- endmacro %}
 
 {% macro iomete__persist_docs(relation, model, for_relation, for_columns) -%}
   {% if for_columns and config.persist_column_docs() and model.columns %}

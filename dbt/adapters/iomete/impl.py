@@ -1,4 +1,3 @@
-import json
 from concurrent.futures import Future
 from dataclasses import dataclass
 from typing import Optional, List, Dict, Any, Union, Iterable, Type
@@ -24,7 +23,7 @@ from dbt.utils import executor
 import sentry_sdk
 
 from dbt.adapters.iomete.python_job import IometeSparkJobHelper
-from dbt.adapters.iomete.schema_service import SchemaService, IOMETE_DEFAULT_CATALOG_NAME
+from dbt.adapters.iomete.schema_service import SchemaService
 
 logger = AdapterLogger("iomete")
 
@@ -98,7 +97,7 @@ class SparkAdapter(SQLAdapter):
     def list_relations_without_caching(
             self, schema_relation: SparkRelation
     ) -> List[SparkRelation]:
-        tables = self.schema_service.get_tables_by_namespace(str(schema_relation))
+        tables = self.schema_service.get_tables_by_namespace(schema_relation.database, schema_relation.schema)
 
         relations = []
         for table in tables:
@@ -107,10 +106,10 @@ class SparkAdapter(SQLAdapter):
                 rel_type = RelationType.View
 
             provider = table['provider'].lower() if table['provider'] else None
-            schema = table['namespace'] if table['catalog'] == IOMETE_DEFAULT_CATALOG_NAME else f"{table['catalog']}.{table['namespace']}"
 
             relation = self.Relation.create(
-                schema=schema,
+                database=table['catalog'],
+                schema=table['namespace'],
                 identifier=table['name'],
                 type=rel_type,
                 provider=provider,
@@ -148,7 +147,7 @@ class SparkAdapter(SQLAdapter):
             )
 
             return [SparkColumn(
-                table_database=None,
+                table_database= relation.database,
                 table_schema=relation.schema,
                 table_name=relation.name,
                 table_type=relation.type,
@@ -170,7 +169,6 @@ class SparkAdapter(SQLAdapter):
     def _get_columns_for_catalog(
             self, relation: SparkRelation
     ) -> Iterable[Dict[str, Any]]:
-        logger.warning("_get_columns_for_catalog {}", relation.__dict__)
         columns = self.get_columns_in_relation(relation)
 
         for column in columns:
@@ -178,20 +176,12 @@ class SparkAdapter(SQLAdapter):
             as_dict = column.to_column_dict()
             as_dict['column_name'] = as_dict.pop('column', None)
             as_dict['column_type'] = as_dict.pop('dtype')
-            as_dict['table_database'] = None
+            as_dict['table_database'] = column.table_database
             yield as_dict
 
     def get_catalog(self, manifest):
 
         schema_map = self._get_catalog_schemas(manifest)
-        if len(schema_map) > 1:
-            raise_compiler_error(
-                f'Expected only one database in get_catalog, found '
-                f'{list(schema_map)}'
-            )
-
-        logger.warning("get_catalog1 {}", schema_map)
-        logger.warning("get_catalog2 {}", self.config)
 
         with executor(self.config) as tpe:
             futures: List[Future[agate.Table]] = []
@@ -207,8 +197,6 @@ class SparkAdapter(SQLAdapter):
     def _get_one_catalog(
             self, information_schema, schemas, manifest,
     ) -> agate.Table:
-        logger.warning("_get_one_catalog1 {}", information_schema.__dict__)
-        logger.warning("_get_one_catalog2 {}", schemas)
         if len(schemas) != 1:
             raise_compiler_error(
                 f'Expected only one schema in spark _get_one_catalog, found '
@@ -220,7 +208,6 @@ class SparkAdapter(SQLAdapter):
 
         columns: List[Dict[str, Any]] = []
         for relation in self.list_relations(database, schema):
-            logger.debug("Getting table schema for relation {}", relation)
             columns.extend(self._get_columns_for_catalog(relation))
         return agate.Table.from_object(
             columns, column_types=DEFAULT_TYPE_TESTER
@@ -276,7 +263,7 @@ class SparkAdapter(SQLAdapter):
         rows = [row for row in raw_rows[0:pos] if not row["col_name"].startswith("#")]
         return [
             SparkColumn(
-                table_database=None,
+                table_database=relation.database,
                 table_schema=relation.schema,
                 table_name=relation.name,
                 table_type=relation.type,
