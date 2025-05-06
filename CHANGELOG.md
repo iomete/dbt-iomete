@@ -1,3 +1,6 @@
+## dbt-iomete 1.7.8 (May 6, 2025)
+- Fixed dbt-common lib issue
+
 ## dbt-iomete 1.7.7 (May 5, 2025)
 - Add explicit multi catalog support and fix snapshot apart from default catalog
 - Add multiple unique key support for incremental tables

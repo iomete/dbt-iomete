@@ -55,7 +55,7 @@ def _get_dbt_core_version():
 
 
 package_name = "dbt-iomete"
-package_version = "1.7.7"
+package_version = "1.7.8"
 dbt_core_version = _get_dbt_core_version()
 description = """The Apache Spark (IOMETE) adapter plugin for dbt"""
 
@@ -73,6 +73,7 @@ setup(
     install_requires=[
         "protobuf==4.25.5",
         "dbt-core~={}".format(dbt_core_version),
+        "dbt-common==1.9.0",
         "sqlparams>=3.0.0",
         "py-hive-iomete>=2.1.3",
         "sentry-sdk==2.20.0",
