@@ -44,13 +44,6 @@
     {% endif %}
   {%- endfor -%}
 
-  {%- set insert_columns = [] -%}
-  {%- for col in dest_columns -%}
-    {% if col.quoted in source_columns %}
-      {% do insert_columns.append(col.quoted) %}
-    {% endif %}
-  {%- endfor -%}
-
   {% if unique_key %}
       {% if unique_key is sequence and unique_key is not mapping and unique_key is not string %}
           {% for key in unique_key %}
@@ -82,8 +75,8 @@
         {%- endfor %}
         {%- else %} * {% endif %}
 
-      when not matched then insert ({{ insert_columns | join(', ') }}) values (
-        {%- for column_name in insert_columns %}
+      when not matched then insert ({{ update_columns | join(', ') }}) values (
+        {%- for column_name in update_columns %}
           DBT_INTERNAL_SOURCE.{{ column_name }}{% if not loop.last %}, {% endif %}
         {%- endfor %}
       )
