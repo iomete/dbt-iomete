@@ -1,6 +1,6 @@
 markupsafe==2.0.1
 protobuf==4.25.5
-dbt-core==1.7.0
+dbt-core==1.7.19
 dbt-common==1.9.0
 
 
@@ -17,4 +17,4 @@ pytest-csv
 twine
 
 # Test requirements
-dbt-tests-adapter==1.7.0
+dbt-tests-adapter==1.7.19

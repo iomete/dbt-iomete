@@ -19,6 +19,12 @@
 {% macro dbt_iomete_validate_get_incremental_strategy(raw_strategy, file_format) %}
   {#-- Validate the incremental strategy #}
 
+  {# TODO: https://linear.app/iomete/issue/PRO-236/add-parquet-csv-json-orc-text-file-format-support #}
+  {% set invalid_file_format_msg -%}
+    Invalid incremental file format provided: {{ file_format }}
+    We only support 'iceberg' file format
+  {%- endset %}
+
   {% set invalid_strategy_msg -%}
     Invalid incremental strategy provided: {{ raw_strategy }}
     Expected one of: 'append', 'merge', 'insert_overwrite'
@@ -36,6 +42,10 @@
   {%- endset %}
 
   {% set is_iceberg_file_format = file_format is not defined or file_format == 'iceberg' %}
+
+  {% if not is_iceberg_file_format %}
+    {% do exceptions.raise_compiler_error(invalid_file_format_msg) %}
+  {% endif %}
 
   {% if raw_strategy not in ['append', 'merge', 'insert_overwrite'] %}
     {% do exceptions.raise_compiler_error(invalid_strategy_msg) %}
