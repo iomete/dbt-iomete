@@ -11,17 +11,27 @@
 
 {% macro get_insert_into_sql(source_relation, target_relation) %}
 
-    {%- set dest_columns = adapter.get_columns_in_relation(target_relation) -%}
-    {%- set dest_cols_csv = dest_columns | map(attribute='quoted') | join(', ') -%}
-    insert into table {{ target_relation }}
-    select {{dest_cols_csv}} from {{ source_relation.include(database=false, schema=false) }}
+    {%- set dest_columns = adapter.get_columns_in_relation(target_relation) | map(attribute='quoted') | list -%}
+    {%- set source_columns = adapter.get_columns_in_relation(source_relation) | map(attribute='quoted') | list -%}
+
+    insert into table {{ target_relation }} ({{ dest_columns | join(', ') }})
+    select
+        {%- for col in dest_columns %}
+            {%- if col in source_columns -%}
+                {{ col }}
+            {%- else -%}
+                NULL AS {{ col }}
+            {%- endif -%}
+            {%- if not loop.last %}, {% endif -%}
+        {%- endfor %}
+    from {{ source_relation.include(database=false, schema=false) }}
 
 {% endmacro %}
 
 
 {% macro iomete__get_merge_sql(target, source, unique_key, dest_columns, predicates=none) %}
   {%- set predicates = [] -%}
-  {%- set source_columns = adapter.get_columns_in_relation(source) -%}
+  {%- set source_columns = adapter.get_columns_in_relation(source) | map(attribute='quoted') | list -%}
   {%- set dest_columns = adapter.get_columns_in_relation(target) -%}
   {%- set merge_update_columns = config.get('merge_update_columns') -%}
   {%- set merge_exclude_columns = config.get('merge_exclude_columns') -%}
@@ -29,14 +39,14 @@
 
   {%- set update_columns = [] -%}
   {%- for column_name in all_update_columns -%}
-    {% if column_name in source_columns | map(attribute='quoted') | list %}
+    {% if column_name in source_columns %}
       {% do update_columns.append(column_name) %}
     {% endif %}
   {%- endfor -%}
 
   {%- set insert_columns = [] -%}
   {%- for col in dest_columns -%}
-    {% if col.quoted in source_columns | map(attribute='quoted') | list %}
+    {% if col.quoted in source_columns %}
       {% do insert_columns.append(col.quoted) %}
     {% endif %}
   {%- endfor -%}
@@ -72,11 +82,7 @@
         {%- endfor %}
         {%- else %} * {% endif %}
 
-      when not matched then insert (
-        {%- for column_name in insert_columns %}
-          {{ column_name }}{% if not loop.last %}, {% endif %}
-        {%- endfor %}
-      ) values (
+      when not matched then insert ({{ insert_columns | join(', ') }}) values (
         {%- for column_name in insert_columns %}
           DBT_INTERNAL_SOURCE.{{ column_name }}{% if not loop.last %}, {% endif %}
         {%- endfor %}
