@@ -21,10 +21,25 @@
 
 {% macro iomete__get_merge_sql(target, source, unique_key, dest_columns, predicates=none) %}
   {%- set predicates = [] -%}
+  {%- set source_columns = adapter.get_columns_in_relation(source) -%}
   {%- set dest_columns = adapter.get_columns_in_relation(target) -%}
   {%- set merge_update_columns = config.get('merge_update_columns') -%}
   {%- set merge_exclude_columns = config.get('merge_exclude_columns') -%}
-  {%- set update_columns = get_merge_update_columns(merge_update_columns, merge_exclude_columns, dest_columns) -%}
+  {%- set all_update_columns = get_merge_update_columns(merge_update_columns, merge_exclude_columns, dest_columns) -%}
+
+  {%- set update_columns = [] -%}
+  {%- for column_name in all_update_columns -%}
+    {% if column_name in source_columns | map(attribute='quoted') | list %}
+      {% do update_columns.append(column_name) %}
+    {% endif %}
+  {%- endfor -%}
+
+  {%- set insert_columns = [] -%}
+  {%- for col in dest_columns -%}
+    {% if col.quoted in source_columns | map(attribute='quoted') | list %}
+      {% do insert_columns.append(col.quoted) %}
+    {% endif %}
+  {%- endfor -%}
 
   {% if unique_key %}
       {% if unique_key is sequence and unique_key is not mapping and unique_key is not string %}
@@ -57,7 +72,15 @@
         {%- endfor %}
         {%- else %} * {% endif %}
 
-      when not matched then insert *
+      when not matched then insert (
+        {%- for column_name in insert_columns %}
+          {{ column_name }}{% if not loop.last %}, {% endif %}
+        {%- endfor %}
+      ) values (
+        {%- for column_name in insert_columns %}
+          DBT_INTERNAL_SOURCE.{{ column_name }}{% if not loop.last %}, {% endif %}
+        {%- endfor %}
+      )
 {% endmacro %}
 
 
