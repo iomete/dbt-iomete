@@ -64,8 +64,7 @@ snapshot_tblproperties_sql = """
 {% endsnapshot %}
 """
 
-seed_tblproperties_csv = """
-id,msg
+seed_tblproperties_csv = """id,msg
 1,hello
 2,yo
 3,anyway
@@ -84,8 +83,7 @@ seeds:
         - name: msg
 """
 
-seed_csv = """
-id,msg
+seed_csv = """id,msg
 1,hello
 2,yo
 3,anyway
