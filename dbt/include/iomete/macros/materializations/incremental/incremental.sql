@@ -13,6 +13,7 @@
   {%- set full_refresh_mode = (should_full_refresh()) -%}
   
   {% set on_schema_change = incremental_validate_on_schema_change(config.get('on_schema_change'), default='ignore') %}
+  {%- set incremental_predicates = config.get('predicates', none) or config.get('incremental_predicates', none) -%}
 
   {% set target_relation = this %}
   {% set existing_relation = load_relation(this) %}
@@ -41,7 +42,7 @@
       {{ create_table_as(True, tmp_relation, compiled_code, language) }}
     {%- endcall -%}
     {%- do process_schema_changes(on_schema_change, tmp_relation, existing_relation) -%}
-    {% set build_sql = dbt_iomete_get_incremental_sql(strategy, tmp_relation, target_relation, unique_key) %}
+    {% set build_sql = dbt_iomete_get_incremental_sql(strategy, tmp_relation, target_relation, unique_key, incremental_predicates) %}
   {% endif %}
 
   {%- call statement('main', language=language) -%}
