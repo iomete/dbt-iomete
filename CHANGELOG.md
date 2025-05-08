@@ -1,3 +1,8 @@
+## dbt-iomete 1.7.9 (May 8, 2025)
+- Added support for table properties via `tblproperties` config.
+- Added support for predicates in incremental models via `incremental_predicates` config.
+- Fixed an issue with the merge and append strategies where columns removed from the model were not handled correctly.
+
 ## dbt-iomete 1.7.8 (May 6, 2025)
 - Fixed dbt-common lib issue
 
