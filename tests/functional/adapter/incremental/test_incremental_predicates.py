@@ -14,7 +14,6 @@ class TestIncrementalPredicatesDeleteInsert(BaseIncrementalPredicates):
         }
 
 
-@pytest.mark.focus
 class TestPredicatesDeleteInsert(BaseIncrementalPredicates):
     @pytest.fixture(scope="class")
     def project_config_update(self):
