@@ -2,7 +2,6 @@ import pytest
 from dbt.tests.adapter.incremental.test_incremental_predicates import BaseIncrementalPredicates
 
 
-@pytest.mark.focus
 class TestIncrementalPredicatesDeleteInsert(BaseIncrementalPredicates):
     @pytest.fixture(scope="class")
     def project_config_update(self):
