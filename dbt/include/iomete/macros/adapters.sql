@@ -88,6 +88,17 @@
     {{ compiled_code }}
 {% endmacro %}
 
+{% macro tblproperties_clause() -%}
+  {%- set tblproperties = config.get('tblproperties') -%}
+  {%- if tblproperties is not none %}
+    tblproperties (
+      {%- for prop in tblproperties -%}
+      '{{ prop }}' = '{{ tblproperties[prop] }}' {% if not loop.last %}, {% endif %}
+      {%- endfor %}
+    )
+  {%- endif %}
+{%- endmacro -%}
+
 {% macro iomete__create_table_as(temporary, relation, compiled_code, language='sql') -%}
   {%- if language == 'sql' -%}
       {% if temporary -%}
