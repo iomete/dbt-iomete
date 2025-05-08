@@ -35,7 +35,7 @@ class TestTblproperties:
     def seeds(self):
         return {
             "expected.csv": fixtures.seed_csv,
-            "seed_tblproperties.csv": fixtures.seed_tblproperties_csv,
+            "set_tblproperties_to_seed.csv": fixtures.seed_tblproperties_csv,
         }
 
     def test_set_tblproperties_to_table(self, project):
@@ -65,7 +65,7 @@ class TestTblproperties:
     def test_set_tblproperties_to_seed(self, project):
         util.run_dbt(["seed", "-s", "expected"])
         util.write_file(fixtures.seed_tblproperties, "seeds", "schema.yml")
-        util.run_dbt(["seed", "-s", "seed_tblproperties"])
+        util.run_dbt(["seed", "-s", "set_tblproperties_to_seed"])
 
-        util.check_relations_equal(project.adapter, ["seed_tblproperties", "expected"])
-        _check_tblproperties(project, "seed_tblproperties", ["tblproperties_to_seed"])
+        util.check_relations_equal(project.adapter, ["set_tblproperties_to_seed", "expected"])
+        _check_tblproperties(project, "set_tblproperties_to_seed", ["tblproperties_to_seed"])

@@ -75,7 +75,7 @@ seed_tblproperties = """
 version: 2
 
 seeds:
-  - name: seed_tblproperties
+  - name: set_tblproperties_to_seed
     config:
         tblproperties:
             tblproperties_to_seed: true
