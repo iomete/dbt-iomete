@@ -88,6 +88,17 @@
     {{ compiled_code }}
 {% endmacro %}
 
+{% macro tblproperties_clause() -%}
+  {%- set tblproperties = config.get('tblproperties') -%}
+  {%- if tblproperties is not none %}
+    tblproperties (
+      {%- for prop in tblproperties -%}
+      '{{ prop }}' = '{{ tblproperties[prop] }}' {% if not loop.last %}, {% endif %}
+      {%- endfor %}
+    )
+  {%- endif %}
+{%- endmacro -%}
+
 {% macro iomete__create_table_as(temporary, relation, compiled_code, language='sql') -%}
   {%- if language == 'sql' -%}
       {% if temporary -%}
@@ -107,6 +118,7 @@
         {{ clustered_cols(label="clustered by") }}
         {{ location_clause() }}
         {{ comment_clause() }}
+        {{ tblproperties_clause() }}
         as
           {{ compiled_code }}
       {%- endif %}
@@ -126,6 +138,7 @@
 {% macro iomete__create_view_as(relation, sql) -%}
   create or replace view {{ relation }}
   {{ comment_clause() }}
+  {{ tblproperties_clause() }}
   as
     {{ sql }}
 {% endmacro %}
