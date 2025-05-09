@@ -1,7 +1,18 @@
-<div style="display: flex; justify-content: center; align-items: center;">
-    <img src="https://iomete.com/resources/logo-black.svg" alt="iomete logo" width="300" style="margin-right: 1rem"/>
-    <img src="https://raw.githubusercontent.com/dbt-labs/dbt/ec7dee39f793aa4f7dd3dae37282cc87664813e4/etc/dbt-logo-full.svg" alt="dbt logo" width="180"/>
-</div>
+<p align="center">
+  <img
+    src="https://iomete.com/resources/logo-black.svg"
+    alt="iomete logo"
+    width="300"
+    align="middle"
+  />
+  &nbsp;&nbsp;&nbsp;
+  <img
+    src="https://raw.githubusercontent.com/dbt-labs/dbt/ec7dee39f793aa4f7dd3dae37282cc87664813e4/etc/dbt-logo-full.svg"
+    alt="dbt logo"
+    width="180"
+    align="middle"
+  />
+</p>
 <p align="center">
   <a href="https://github.com/iomete/dbt-iomete/actions/workflows/release.yml">
     <img src="https://github.com/iomete/dbt-iomete/actions/workflows/release.yml/badge.svg?event=push" alt="Release Badge"/>
